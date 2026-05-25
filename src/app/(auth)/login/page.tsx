@@ -1,0 +1,158 @@
+"use client";
+
+import { useState, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { useAuthActions } from "@/hooks/use-auth-actions";
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/feed";
+
+  const { signIn, signInWithGoogle, loading, error, clearError } =
+    useAuthActions();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await signIn({ email, password });
+      router.push(redirectTo);
+    } catch {
+      // Error is handled by the hook
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle("client");
+      router.push(redirectTo);
+    } catch {
+      // Error is handled by the hook
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="text-[31px] font-extrabold text-text-primary text-center">
+        Sign in to LegalConnect
+      </h1>
+
+      {error && (
+        <div className="mt-4 rounded-xl bg-[#F4212E]/10 px-4 py-3 text-[15px] text-[#F4212E]">
+          {error}
+        </div>
+      )}
+
+      {/* Google sign in */}
+      <button
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+        className="mt-6 w-full flex items-center justify-center gap-3 h-[40px] rounded-full border border-border-custom text-[15px] font-medium text-text-primary hover:bg-[#E7E9EA] transition-colors disabled:opacity-50"
+      >
+        <svg className="size-5" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+        </svg>
+        Sign in with Google
+      </button>
+
+      <div className="relative my-4">
+        <Separator />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-[15px] text-muted-text">
+          or
+        </span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              clearError();
+            }}
+            className="h-[42px] rounded-md border-border-custom text-[15px] focus-visible:ring-brand focus-visible:border-brand"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              clearError();
+            }}
+            className="h-[42px] rounded-md border-border-custom text-[15px] pr-10 focus-visible:ring-brand focus-visible:border-brand"
+            required
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text hover:text-text-primary"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+
+        <div className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-[13px] font-medium text-brand hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        <button
+          type="submit"
+          className="w-full h-[42px] rounded-full bg-brand text-[15px] font-bold text-white hover:bg-brand-dark disabled:opacity-50 transition-colors"
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="size-4 animate-spin" />
+              Signing in...
+            </span>
+          ) : (
+            "Sign in"
+          )}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-[15px] text-muted-text">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="font-medium text-brand hover:underline">
+          Sign up
+        </Link>
+      </p>
+    </div>
+  );
+}
