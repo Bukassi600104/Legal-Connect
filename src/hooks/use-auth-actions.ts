@@ -239,6 +239,7 @@ export function useAuthActions() {
 function getFirebaseErrorMessage(err: unknown): string {
   if (err && typeof err === "object" && "code" in err) {
     const code = (err as { code: string }).code;
+    console.error("[Auth Error]", code, err);
     switch (code) {
       case "auth/email-already-in-use":
         return "An account with this email already exists.";
@@ -258,9 +259,23 @@ function getFirebaseErrorMessage(err: unknown): string {
         return "Sign-in popup was closed. Please try again.";
       case "auth/network-request-failed":
         return "Network error. Please check your connection.";
+      case "auth/unauthorized-domain":
+        return "This domain is not authorized for sign-in. Please contact support.";
+      case "auth/operation-not-allowed":
+        return "This sign-in method is not enabled. Please contact support.";
+      case "auth/popup-blocked":
+        return "Sign-in popup was blocked. Please allow popups and try again.";
+      case "auth/account-exists-with-different-credential":
+        return "An account already exists with this email using a different sign-in method.";
+      case "auth/cancelled-popup-request":
+        return "Sign-in was cancelled. Please try again.";
+      case "auth/internal-error":
+        return "An internal error occurred. Please try again later.";
       default:
-        return "An error occurred. Please try again.";
+        console.error("[Auth Error] Unhandled code:", code);
+        return `Authentication error (${code}). Please try again.`;
     }
   }
-  return "An unexpected error occurred.";
+  console.error("[Auth Error] Non-Firebase error:", err);
+  return "An unexpected error occurred. Please try again.";
 }
