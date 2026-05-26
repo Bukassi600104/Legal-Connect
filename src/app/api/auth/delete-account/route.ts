@@ -4,29 +4,25 @@ import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify the current session first
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("session")?.value;
 
-    let callerUid: string | null = null;
-
-    if (sessionCookie) {
-      try {
-        const decoded = await adminAuth.verifySessionCookie(sessionCookie);
-        callerUid = decoded.uid;
-      } catch {
-        // Session invalid
-      }
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
 
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const callerUid = decoded.uid;
     const { uid } = await request.json();
 
     if (!uid) {
       return NextResponse.json({ error: "Missing uid" }, { status: 400 });
     }
 
-    // Security: only allow users to delete their own account
-    if (callerUid && callerUid !== uid) {
+    if (callerUid !== uid) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

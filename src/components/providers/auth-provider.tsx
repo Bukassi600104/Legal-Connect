@@ -93,10 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!data.user || !data.customToken) return false;
 
       // Re-authenticate client-side with custom token
-      const userCredential = await signInWithCustomToken(
-        auth,
-        data.customToken
-      );
+      await signInWithCustomToken(auth, data.customToken);
       // onAuthStateChanged will handle setting state
       return true;
     } catch (error) {

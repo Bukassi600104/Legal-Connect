@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    // Verify the ID token and reject revoked credentials.
+    const decodedToken = await adminAuth.verifyIdToken(idToken, true);
 
     // Create a session cookie (5 days)
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days in ms
