@@ -18,7 +18,7 @@ import { Bell, Check, MessageCircle, UserPlus, Star, Calendar, CreditCard } from
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import type { Notification, NotificationType } from "@/types";
+import type { Notification } from "@/types";
 
 const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   new_message: MessageCircle,

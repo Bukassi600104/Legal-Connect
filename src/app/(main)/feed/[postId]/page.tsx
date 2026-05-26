@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -25,14 +25,11 @@ import {
   MessageCircle,
   Share2,
   Bookmark,
-  Send,
   Loader2,
   Trash2,
   BadgeCheck,
   Repeat2,
 } from "lucide-react";
-import { VerificationBadge } from "@/components/shared/verification-badge";
-import { PremiumBadge } from "@/components/shared/premium-badge";
 import { PollDisplay } from "@/components/feed/poll-display";
 import { ThreadView } from "@/components/feed/thread-view";
 import { PageLoader } from "@/components/shared/loading-spinner";
@@ -61,11 +58,44 @@ export default function PostDetailPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    fetchPost();
+  const fetchComments = useCallback(async () => {
+    try {
+      const q = query(
+        collection(db, "post_comments"),
+        where("post_id", "==", postId),
+        orderBy("created_at", "asc")
+      );
+      const snap = await getDocs(q);
+      const rawComments = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() } as PostComment)
+      );
+
+      const userIds = [...new Set(rawComments.map((c) => c.user_id))];
+      const userMap = new Map<string, UserProfile>();
+      await Promise.all(
+        userIds.map(async (uid) => {
+          const userDoc = await getDoc(doc(db, "users", uid));
+          if (userDoc.exists()) {
+            userMap.set(uid, {
+              id: userDoc.id,
+              ...userDoc.data(),
+            } as UserProfile);
+          }
+        })
+      );
+
+      const hydrated = rawComments.map((c) => ({
+        ...c,
+        user: userMap.get(c.user_id),
+      }));
+
+      setComments(hydrated);
+    } catch {
+      // Index may not exist
+    }
   }, [postId]);
 
-  async function fetchPost() {
+  const fetchPost = useCallback(async () => {
     try {
       const postDoc = await getDoc(doc(db, "posts", postId));
       if (!postDoc.exists()) {
@@ -110,44 +140,15 @@ export default function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [fetchComments, postId, user]);
 
-  async function fetchComments() {
-    try {
-      const q = query(
-        collection(db, "post_comments"),
-        where("post_id", "==", postId),
-        orderBy("created_at", "asc")
-      );
-      const snap = await getDocs(q);
-      const rawComments = snap.docs.map(
-        (d) => ({ id: d.id, ...d.data() } as PostComment)
-      );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchPost();
+    }, 0);
 
-      const userIds = [...new Set(rawComments.map((c) => c.user_id))];
-      const userMap = new Map<string, UserProfile>();
-      await Promise.all(
-        userIds.map(async (uid) => {
-          const userDoc = await getDoc(doc(db, "users", uid));
-          if (userDoc.exists()) {
-            userMap.set(uid, {
-              id: userDoc.id,
-              ...userDoc.data(),
-            } as UserProfile);
-          }
-        })
-      );
-
-      const hydrated = rawComments.map((c) => ({
-        ...c,
-        user: userMap.get(c.user_id),
-      }));
-
-      setComments(hydrated);
-    } catch {
-      // Index may not exist
-    }
-  }
+    return () => clearTimeout(timer);
+  }, [fetchPost]);
 
   async function handleComment(e: React.FormEvent) {
     e.preventDefault();

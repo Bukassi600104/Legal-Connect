@@ -8,9 +8,6 @@ import { FieldValue } from "firebase-admin/firestore";
 
 const PASSWORD = "Test1234!";
 
-function diceBearAvatar(name: string) {
-  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=d1e8ff&textColor=1a8cd8`;
-}
 function diceBearBanner(name: string) {
   return `https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(name)}&backgroundColor=1a8cd8,0d6ebd,2ba3f7`;
 }
@@ -466,7 +463,7 @@ export async function POST() {
           phoneNumber: lawyer.phone,
         });
         uid = userRecord.uid;
-      } catch (error: unknown) {
+      } catch {
         // If user already exists, fetch the uid
         const existing = await adminAuth.getUserByEmail(lawyer.email);
         uid = existing.uid;
@@ -547,7 +544,7 @@ export async function POST() {
           phoneNumber: client.phone,
         });
         uid = userRecord.uid;
-      } catch (error: unknown) {
+      } catch {
         const existing = await adminAuth.getUserByEmail(client.email);
         uid = existing.uid;
       }

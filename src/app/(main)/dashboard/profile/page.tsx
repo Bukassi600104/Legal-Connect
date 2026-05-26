@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import {
@@ -24,7 +23,6 @@ export const dynamic = "force-dynamic";
 
 export default function EditLawyerProfilePage() {
   const { user, lawyerProfile, refreshProfile } = useAuth();
-  const router = useRouter();
 
   const [bio, setBio] = useState(lawyerProfile?.bio || "");
   const [locationState, setLocationState] = useState(

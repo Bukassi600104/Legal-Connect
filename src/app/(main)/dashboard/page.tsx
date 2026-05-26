@@ -27,7 +27,7 @@ import {
 import { TierBadge } from "@/components/shared/tier-badge";
 import { PageLoader } from "@/components/shared/loading-spinner";
 import { useAuth } from "@/components/providers/auth-provider";
-import type { Post, Consultation } from "@/types";
+import type { Post } from "@/types";
 
 export const dynamic = "force-dynamic";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   doc,
@@ -55,7 +55,6 @@ const DURATION_OPTIONS = [
 
 export default function BookConsultationPage() {
   const params = useParams();
-  const router = useRouter();
   const lawyerId = params.lawyerId as string;
   const { user } = useAuth();
 

@@ -34,7 +34,6 @@ interface PostCardProps {
     author?: UserProfile;
     author_profile?: LawyerProfile;
   };
-  onUpdate?: () => void;
 }
 
 function renderContentWithHashtags(content: string) {
@@ -57,7 +56,7 @@ function renderContentWithHashtags(content: string) {
   });
 }
 
-export function PostCard({ post, onUpdate }: PostCardProps) {
+export function PostCard({ post }: PostCardProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [liked, setLiked] = useState(post.is_liked ?? false);

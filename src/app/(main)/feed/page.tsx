@@ -191,7 +191,7 @@ export default function FeedPage() {
       ) : (
         <div>
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onUpdate={fetchPosts} />
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       )}

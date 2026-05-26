@@ -6,8 +6,6 @@ import {
   LayoutDashboard,
   Shield,
   Scale,
-  Users,
-  Bell,
   Settings,
   type LucideIcon,
 } from "lucide-react";

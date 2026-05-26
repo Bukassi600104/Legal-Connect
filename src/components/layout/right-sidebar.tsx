@@ -132,7 +132,7 @@ export function RightSidebar() {
         <h3 className="px-4 pt-3 pb-2 text-xl font-extrabold text-text-primary">
           Trending
         </h3>
-        {displayTopics.map((topic, index) => (
+        {displayTopics.map((topic) => (
           <Link
             key={topic.tag}
             href={`/hashtag/${topic.tag}`}

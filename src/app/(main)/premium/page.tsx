@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Star, Check, Zap, MessageCircle, BarChart3, Shield } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { PremiumBadge } from "@/components/shared/premium-badge";
@@ -59,13 +58,11 @@ function formatNaira(amount: number) {
 
 export default function PremiumPage() {
   const { profile } = useAuth();
-  const router = useRouter();
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
 
   const isLawyer = profile?.role === "lawyer";
   const isPremium = profile?.is_premium;
   const pricing = isLawyer ? PRICING.lawyer : PRICING.client;
-  const price = billing === "monthly" ? pricing.monthly : pricing.yearly;
   const savedPercent = Math.round(
     ((pricing.monthly * 12 - pricing.yearly) / (pricing.monthly * 12)) * 100
   );

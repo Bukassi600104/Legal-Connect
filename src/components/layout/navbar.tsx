@@ -1,16 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import {
-  Search,
   Settings,
-  ArrowLeft,
   Scale,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { cn } from "@/lib/utils";
 
 interface NavbarProps {
   onMobileMenuToggle?: () => void;
@@ -18,8 +13,6 @@ interface NavbarProps {
 
 export function Navbar({ onMobileMenuToggle }: NavbarProps) {
   const { user, profile, loading: authLoading } = useAuth();
-  const pathname = usePathname();
-  const router = useRouter();
 
   // On desktop, X hides the top navbar (sidebar is primary).
   // On mobile, show the X-style top bar: avatar left, logo center, settings right

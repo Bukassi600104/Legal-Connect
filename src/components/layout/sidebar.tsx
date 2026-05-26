@@ -12,7 +12,6 @@ import {
   Shield,
   Settings,
   MoreHorizontal,
-  Bell,
   Scale,
   PenSquare,
   Star,

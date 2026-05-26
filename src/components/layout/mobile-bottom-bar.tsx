@@ -15,7 +15,7 @@ const tabs = [
 
 export function MobileBottomBar() {
   const pathname = usePathname();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   if (!user) return null;
 
