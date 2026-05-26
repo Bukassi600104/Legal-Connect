@@ -8,8 +8,8 @@ export const SUBSCRIPTION_PLANS = {
   professional: {
     id: "professional",
     name: "Professional",
-    price_monthly: 1500000, // ₦15,000
-    price_yearly: 14400000, // ₦144,000 (₦12,000/mo)
+    price_monthly: 1500000, // NGN 15,000
+    price_yearly: 14400000, // NGN 144,000 (NGN 12,000/mo)
     features: {
       verified_badge: true,
       priority_listing: true,
@@ -25,8 +25,8 @@ export const SUBSCRIPTION_PLANS = {
   elite: {
     id: "elite",
     name: "Elite",
-    price_monthly: 3500000, // ₦35,000
-    price_yearly: 33600000, // ₦336,000 (₦28,000/mo)
+    price_monthly: 3500000, // NGN 35,000
+    price_yearly: 33600000, // NGN 336,000 (NGN 28,000/mo)
     features: {
       verified_badge: true,
       priority_listing: true,
@@ -53,5 +53,5 @@ export const FEATURE_LABELS: Record<string, string> = {
 };
 
 export function formatNaira(kobo: number): string {
-  return `₦${(kobo / 100).toLocaleString()}`;
+  return `NGN ${(kobo / 100).toLocaleString("en-NG")}`;
 }

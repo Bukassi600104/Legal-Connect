@@ -39,18 +39,12 @@ export default function SubscriptionPage() {
         SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS];
       if (!plan) return;
 
-      const amount =
-        billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
-
       const response = await fetch("/api/paystack/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: profile.email,
-          amount,
           plan_id: planId,
           billing_cycle: billingCycle,
-          lawyer_id: user.uid,
         }),
       });
 
