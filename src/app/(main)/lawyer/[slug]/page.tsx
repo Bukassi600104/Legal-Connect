@@ -21,7 +21,6 @@ import { query, where, getDocs, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { TierBadge } from "@/components/shared/tier-badge";
 import { PremiumBadge } from "@/components/shared/premium-badge";
-import { CategoryPill } from "@/components/shared/category-pill";
 import { PageLoader } from "@/components/shared/loading-spinner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useFollow } from "@/hooks/use-follow";
@@ -31,6 +30,11 @@ import type { LawyerProfile, UserProfile, Post, Review } from "@/types";
 export const dynamic = "force-dynamic";
 
 type ProfileTab = "posts" | "about" | "reviews";
+
+function formatNairaValue(value?: number) {
+  if (value == null) return null;
+  return `NGN ${value.toLocaleString("en-NG")}`;
+}
 
 export default function LawyerProfilePage() {
   const params = useParams();
@@ -145,6 +149,15 @@ export default function LawyerProfilePage() {
     { label: "About", value: "about" },
     { label: "Reviews", value: "reviews", count: lawyer.rating_count },
   ];
+  const feeMin = formatNairaValue(lawyer.fee_range_min);
+  const feeMax = formatNairaValue(lawyer.fee_range_max);
+  const feeRange = feeMin ? `${feeMin}${feeMax ? ` - ${feeMax}` : "+"}` : null;
+  const verificationLabel =
+    lawyer.verification_status === "verified"
+      ? "Verified credentials"
+      : lawyer.verification_status === "pending"
+        ? "Verification pending"
+        : "Unverified profile";
 
   return (
     <div>
@@ -346,6 +359,35 @@ export default function LawyerProfilePage() {
               <span className="text-muted-text">({lawyer.rating_count})</span>
             </span>
           )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="rounded-lg border border-border-custom px-3 py-2">
+            <p className="text-[12px] font-bold uppercase text-muted-text">
+              Consultation
+            </p>
+            <p className="mt-0.5 text-[14px] font-bold text-text-primary">
+              {feeRange || "Rate on request"}
+            </p>
+          </div>
+          <div className="rounded-lg border border-border-custom px-3 py-2">
+            <p className="text-[12px] font-bold uppercase text-muted-text">
+              Trust
+            </p>
+            <p className="mt-0.5 text-[14px] font-bold text-text-primary">
+              {verificationLabel}
+            </p>
+          </div>
+          <div className="rounded-lg border border-border-custom px-3 py-2">
+            <p className="text-[12px] font-bold uppercase text-muted-text">
+              Availability
+            </p>
+            <p className="mt-0.5 text-[14px] font-bold text-text-primary">
+              {lawyer.availability_status === "accepting"
+                ? "Accepting matters"
+                : "Limited availability"}
+            </p>
+          </div>
         </div>
       </div>
 

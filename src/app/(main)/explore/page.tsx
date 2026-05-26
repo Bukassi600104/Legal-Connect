@@ -10,9 +10,9 @@ import {
   SlidersHorizontal,
   X,
   Users,
-  BadgeCheck,
   Hash,
   Loader2,
+  ShieldCheck,
 } from "lucide-react";
 import {
   collection,
@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VerificationBadge } from "@/components/shared/verification-badge";
 import { PremiumBadge } from "@/components/shared/premium-badge";
 import { TierBadge } from "@/components/shared/tier-badge";
 import { PageLoader } from "@/components/shared/loading-spinner";
@@ -49,6 +48,51 @@ interface LawyerWithUser extends LawyerProfile {
 interface HashtagResult {
   tag: string;
   count: number;
+}
+
+const POPULAR_SPECIALIZATIONS = [
+  "Corporate Law",
+  "Property Law",
+  "Family Law",
+  "Criminal Defense",
+  "Employment Law",
+];
+
+function toSpecializationSlug(value: string) {
+  return value.toLowerCase().replace(/\s+/g, "-");
+}
+
+function formatNairaValue(value?: number) {
+  if (value == null) return null;
+  return `NGN ${value.toLocaleString("en-NG")}`;
+}
+
+function getSpecializationName(slug: string) {
+  return (
+    SPECIALIZATION_SEEDS.find((spec) => spec.slug === slug)?.name ||
+    slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}
+
+function getMarketplaceScore(lawyer: LawyerWithUser) {
+  const tierScore =
+    lawyer.subscription_tier === "elite"
+      ? 30
+      : lawyer.subscription_tier === "professional"
+        ? 18
+        : 0;
+  const verificationScore =
+    lawyer.verification_status === "verified" ? 25 : 0;
+  const availabilityScore =
+    lawyer.availability_status === "accepting" ? 15 : 0;
+
+  return (
+    tierScore +
+    verificationScore +
+    availabilityScore +
+    (lawyer.rating_avg || 0) * 5 +
+    Math.min(lawyer.rating_count || 0, 20)
+  );
 }
 
 export default function ExplorePage() {
@@ -146,13 +190,13 @@ function ExploreContent() {
 
       if (specFilter) {
         filtered = filtered.filter((l) =>
-          l.specialization_ids.includes(
-            specFilter.toLowerCase().replace(/\s+/g, "-")
-          )
+          l.specialization_ids.includes(toSpecializationSlug(specFilter))
         );
       }
 
-      setLawyers(filtered);
+      setLawyers(
+        filtered.sort((a, b) => getMarketplaceScore(b) - getMarketplaceScore(a))
+      );
     } catch (error) {
       console.error("Error fetching lawyers:", error);
     } finally {
@@ -271,6 +315,30 @@ function ExploreContent() {
               className="w-full h-[42px] rounded-full bg-[#EFF3F4] pl-12 pr-4 text-[15px] text-text-primary placeholder:text-muted-text outline-none border border-transparent focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
             />
           </form>
+          {activeTab === "lawyers" && (
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {POPULAR_SPECIALIZATIONS.map((spec) => {
+                const slug = toSpecializationSlug(spec);
+                const selected = specFilter === slug;
+
+                return (
+                  <button
+                    key={spec}
+                    type="button"
+                    onClick={() => setSpecFilter(selected ? "" : slug)}
+                    className={cn(
+                      "shrink-0 rounded-full border px-3 py-1 text-[13px] font-medium transition-colors",
+                      selected
+                        ? "border-brand bg-brand text-white"
+                        : "border-border-custom text-text-primary hover:bg-[#EFF3F4]"
+                    )}
+                  >
+                    {spec}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -296,6 +364,23 @@ function ExploreContent() {
       </div>
 
       {/* Filters panel — only for lawyers tab */}
+      {activeTab === "lawyers" && (
+        <div className="grid grid-cols-3 border-b border-border-custom text-center">
+          {[
+            { label: "Verified profiles", value: "SCN/NBA" },
+            { label: "Client-ready", value: "Chat + booking" },
+            { label: "Transparent", value: "Fee ranges" },
+          ].map((item) => (
+            <div key={item.label} className="px-2 py-3">
+              <p className="text-[13px] font-bold text-text-primary">
+                {item.value}
+              </p>
+              <p className="text-[11px] text-muted-text">{item.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {activeTab === "lawyers" && showFilters && (
         <div className="border-b border-border-custom px-4 py-3 bg-white">
           <div className="flex items-center justify-between mb-3">
@@ -475,6 +560,13 @@ function ExploreContent() {
 }
 
 function LawyerRow({ lawyer }: { lawyer: LawyerWithUser }) {
+  const feeMin = formatNairaValue(lawyer.fee_range_min);
+  const feeMax = formatNairaValue(lawyer.fee_range_max);
+  const feeRange = feeMin ? `${feeMin}${feeMax ? ` - ${feeMax}` : "+"}` : null;
+  const displaySpecializations =
+    lawyer.specializations?.map((spec) => spec.name) ||
+    lawyer.specialization_ids.map(getSpecializationName);
+
   return (
     <Link
       href={`/lawyer/${lawyer.slug}`}
@@ -501,7 +593,7 @@ function LawyerRow({ lawyer }: { lawyer: LawyerWithUser }) {
           </span>
           {lawyer.userProfile?.is_premium && <PremiumBadge size="sm" />}
           {lawyer.verification_status === "verified" && (
-            <BadgeCheck className="size-[18px] text-brand shrink-0" />
+            <ShieldCheck className="size-[18px] text-brand shrink-0" />
           )}
           <TierBadge tier={lawyer.subscription_tier} size="sm" />
         </div>
@@ -522,6 +614,19 @@ function LawyerRow({ lawyer }: { lawyer: LawyerWithUser }) {
             <span>· {lawyer.years_of_experience} yrs</span>
           )}
         </div>
+
+        {displaySpecializations.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {displaySpecializations.slice(0, 3).map((spec) => (
+              <span
+                key={spec}
+                className="rounded-full bg-[#EFF3F4] px-2 py-0.5 text-[12px] font-medium text-text-primary"
+              >
+                {spec}
+              </span>
+            ))}
+          </div>
+        )}
 
         {lawyer.bio && (
           <p className="mt-1 text-[15px] text-text-primary line-clamp-2 leading-5">
@@ -554,6 +659,11 @@ function LawyerRow({ lawyer }: { lawyer: LawyerWithUser }) {
               ? "Available"
               : "Unavailable"}
           </span>
+          {feeRange && (
+            <span className="text-[13px] font-medium text-text-primary">
+              {feeRange}
+            </span>
+          )}
         </div>
       </div>
 
