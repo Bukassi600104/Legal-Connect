@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 type FeedTab = "for-you" | "following";
 
 export default function FeedPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +117,11 @@ export default function FeedPage() {
   }, [activeTab, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetchPosts();
+    const timer = setTimeout(() => {
+      void fetchPosts();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchPosts]);
 
   return (

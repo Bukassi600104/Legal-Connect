@@ -12,10 +12,9 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { Search, MessageCircle, Settings, MailPlus } from "lucide-react";
+import { Search, Settings, MailPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PageLoader } from "@/components/shared/loading-spinner";
-import { EmptyState } from "@/components/shared/empty-state";
 import { useAuth } from "@/components/providers/auth-provider";
 import { formatDistanceToNow } from "date-fns";
 import type { Conversation, UserProfile } from "@/types";
@@ -34,10 +33,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
     const q = query(
       collection(db, "conversations"),
@@ -97,7 +93,9 @@ export default function MessagesPage() {
       )
     : conversations;
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   return (
     <div className="flex flex-col h-screen">

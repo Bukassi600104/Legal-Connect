@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   collection,
   query,
@@ -42,11 +42,7 @@ export default function ModerationPage() {
   const [selectedPost, setSelectedPost] = useState<ReportedPost | null>(null);
   const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    fetchReportedPosts();
-  }, []);
-
-  async function fetchReportedPosts() {
+  const fetchReportedPosts = useCallback(async () => {
     setLoading(true);
     try {
       const q = query(
@@ -79,7 +75,15 @@ export default function ModerationPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchReportedPosts();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchReportedPosts]);
 
   async function handleRemovePost(postId: string) {
     if (processing) return;

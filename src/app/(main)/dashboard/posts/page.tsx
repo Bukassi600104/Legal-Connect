@@ -36,7 +36,7 @@ export default function DashboardPostsPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { setLoading(false); return; }
+    if (!user) return;
 
     async function fetchPosts() {
       try {
@@ -57,7 +57,7 @@ export default function DashboardPostsPage() {
       }
     }
 
-    fetchPosts();
+    void fetchPosts();
   }, [user, authLoading]);
 
   async function handleDelete(postId: string) {
@@ -86,7 +86,9 @@ export default function DashboardPostsPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   return (
     <div>

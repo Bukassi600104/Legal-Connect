@@ -33,10 +33,17 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Post, UserProfile, LawyerProfile } from "@/types";
+import type { Timestamp } from "firebase/firestore";
 
 export const dynamic = "force-dynamic";
 
 type Tab = "posts" | "threads" | "replies" | "likes";
+
+function toDateValue(value: Timestamp | string | undefined): Date {
+  if (!value) return new Date();
+  if (typeof value === "string") return new Date(value);
+  return value.toDate?.() ?? new Date();
+}
 
 type PopulatedPost = Post & {
   author?: UserProfile;
@@ -199,16 +206,12 @@ export default function ProfilePage() {
     return (
       <div className="py-20 text-center">
         <h2 className="text-xl font-extrabold text-text-primary">Account not found</h2>
-        <p className="mt-2 text-[15px] text-muted-text">@{handle} doesn't exist</p>
+        <p className="mt-2 text-[15px] text-muted-text">@{handle} doesn&apos;t exist</p>
       </div>
     );
   }
 
-  const createdAt = profileUser.created_at
-    ? typeof profileUser.created_at === "string"
-      ? new Date(profileUser.created_at)
-      : (profileUser.created_at as any).toDate?.() ?? new Date()
-    : new Date();
+  const createdAt = toDateValue(profileUser.created_at);
 
   const isOwnProfile = currentUser?.uid === profileUser.id;
 

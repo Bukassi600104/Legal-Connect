@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   collection,
@@ -79,13 +79,7 @@ export default function ConsultationsPage() {
   );
   const [processing, setProcessing] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) { setLoading(false); return; }
-    fetchConsultations();
-  }, [user, filter, authLoading]);
-
-  async function fetchConsultations() {
+  const fetchConsultations = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
@@ -158,7 +152,16 @@ export default function ConsultationsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filter, isLawyer, user]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const timer = setTimeout(() => {
+      void fetchConsultations();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [authLoading, fetchConsultations, user]);
 
   async function updateStatus(
     consultId: string,
@@ -188,7 +191,9 @@ export default function ConsultationsPage() {
     { label: "All", value: "all" as const },
   ];
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   return (
     <div>

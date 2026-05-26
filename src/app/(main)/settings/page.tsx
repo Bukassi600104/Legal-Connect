@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { doc, updateDoc, deleteDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { updateProfile, deleteUser } from "firebase/auth";
 import { db, auth } from "@/lib/firebase/config";
 import { validateHandle, isHandleAvailable, claimHandle } from "@/lib/handle-utils";
@@ -27,10 +27,12 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (profile?.full_name && !fullName) setFullName(profile.full_name);
-    if (profile?.phone && !phone) setPhone(profile.phone);
-    if (profile?.handle && !handle) setHandle(profile.handle);
-  }, [profile]);
+    queueMicrotask(() => {
+      if (profile?.full_name && !fullName) setFullName(profile.full_name);
+      if (profile?.phone && !phone) setPhone(profile.phone);
+      if (profile?.handle && !handle) setHandle(profile.handle);
+    });
+  }, [fullName, handle, phone, profile]);
   const [saved, setSaved] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");

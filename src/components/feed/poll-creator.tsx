@@ -17,6 +17,10 @@ const DURATION_OPTIONS = [
   { label: "7 days", value: 168 },
 ];
 
+function getPollEndIso(hours: number): string {
+  return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+}
+
 export function PollCreator({ onPollChange, onCancel }: PollCreatorProps) {
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [durationHours, setDurationHours] = useState(24);
@@ -45,7 +49,7 @@ export function PollCreator({ onPollChange, onCancel }: PollCreatorProps) {
   const emitPoll = (opts: string[], hours: number) => {
     const validOptions = opts.filter((o) => o.trim().length > 0);
     if (validOptions.length >= 2) {
-      const endsAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+      const endsAt = getPollEndIso(hours);
       onPollChange({
         options: opts.map((text) => ({ text: text.trim(), vote_count: 0 })),
         total_votes: 0,

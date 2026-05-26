@@ -31,7 +31,6 @@ export default function ChatPage() {
   const conversationId = params.conversationId as string;
   const { user, loading: authLoading } = useAuth();
 
-  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherUser, setOtherUser] = useState<UserProfile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,10 +40,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !conversationId) {
-      setLoading(false);
-      return;
-    }
+    if (!user || !conversationId) return;
 
     async function fetchConvo() {
       const convoDoc = await getDoc(doc(db, "conversations", conversationId));
@@ -57,8 +53,6 @@ export default function ChatPage() {
         id: convoDoc.id,
         ...convoDoc.data(),
       } as Conversation;
-      setConversation(convoData);
-
       const otherUserId = convoData.participants?.find((p) => p !== user!.uid) ?? "";
 
       if (convoData.participant_names?.[otherUserId]) {
@@ -83,11 +77,11 @@ export default function ChatPage() {
       }
     }
 
-    fetchConvo();
+    void fetchConvo();
   }, [user, authLoading, conversationId, router]);
 
   useEffect(() => {
-    if (!conversationId) return;
+    if (!user || !conversationId) return;
 
     const q = query(
       collection(db, "conversations", conversationId, "messages"),
@@ -107,7 +101,7 @@ export default function ChatPage() {
     });
 
     return () => unsubscribe();
-  }, [conversationId]);
+  }, [conversationId, user]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +134,9 @@ export default function ChatPage() {
     }
   };
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   return (
     <div className="flex flex-col h-screen">

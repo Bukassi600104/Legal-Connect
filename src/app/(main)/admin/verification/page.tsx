@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   collection,
   query,
@@ -18,7 +18,6 @@ import {
   ExternalLink,
   CheckCircle2,
   XCircle,
-  Clock,
   FileText,
 } from "lucide-react";
 import { PageLoader } from "@/components/shared/loading-spinner";
@@ -52,11 +51,7 @@ export default function VerificationQueuePage() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    fetchRequests();
-  }, [filter]);
-
-  async function fetchRequests() {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const q = query(
@@ -89,7 +84,15 @@ export default function VerificationQueuePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filter]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchRequests();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchRequests]);
 
   async function handleReview(
     request: VerificationWithLawyer,

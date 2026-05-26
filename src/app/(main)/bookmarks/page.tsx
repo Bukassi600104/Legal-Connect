@@ -8,13 +8,10 @@ import {
   getDocs,
   doc,
   getDoc,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { Bookmark } from "lucide-react";
 import { PostCard } from "@/components/feed/post-card";
 import { PageLoader } from "@/components/shared/loading-spinner";
-import { EmptyState } from "@/components/shared/empty-state";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { Post, UserProfile, LawyerProfile } from "@/types";
 
@@ -27,7 +24,7 @@ export default function BookmarksPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { setLoading(false); return; }
+    if (!user) return;
 
     async function fetchBookmarks() {
       try {
@@ -113,10 +110,12 @@ export default function BookmarksPage() {
       }
     }
 
-    fetchBookmarks();
+    void fetchBookmarks();
   }, [user, authLoading]);
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   return (
     <div>

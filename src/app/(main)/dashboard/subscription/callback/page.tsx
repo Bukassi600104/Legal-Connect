@@ -14,20 +14,21 @@ function CallbackContent() {
   );
 
   useEffect(() => {
-    if (!reference) {
-      setStatus("error");
-      return;
-    }
+    if (!reference) return;
 
     // Give webhook time to process
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setStatus("success");
     }, 2000);
+
+    return () => clearTimeout(timer);
   }, [reference]);
+
+  const displayStatus = reference ? status : "error";
 
   return (
     <div className="px-8 py-16 text-center">
-      {status === "loading" && (
+      {displayStatus === "loading" && (
         <>
           <Loader2 className="size-12 text-brand animate-spin mx-auto" />
           <h2 className="mt-4 text-[23px] font-extrabold text-text-primary">
@@ -39,7 +40,7 @@ function CallbackContent() {
         </>
       )}
 
-      {status === "success" && (
+      {displayStatus === "success" && (
         <>
           <CheckCircle2 className="size-12 text-[#00BA7C] mx-auto" />
           <h2 className="mt-4 text-[23px] font-extrabold text-text-primary">
@@ -57,7 +58,7 @@ function CallbackContent() {
         </>
       )}
 
-      {status === "error" && (
+      {displayStatus === "error" && (
         <>
           <XCircle className="size-12 text-[#F4212E] mx-auto" />
           <h2 className="mt-4 text-[23px] font-extrabold text-text-primary">

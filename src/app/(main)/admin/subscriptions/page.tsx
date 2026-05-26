@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   collection,
   query,
@@ -31,11 +31,7 @@ export default function AdminSubscriptionsPage() {
     elite: 0,
   });
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, []);
-
-  async function fetchSubscriptions() {
+  const fetchSubscriptions = useCallback(async () => {
     setLoading(true);
     try {
       const q = query(
@@ -80,7 +76,15 @@ export default function AdminSubscriptionsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchSubscriptions();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchSubscriptions]);
 
   if (loading) return <PageLoader />;
 

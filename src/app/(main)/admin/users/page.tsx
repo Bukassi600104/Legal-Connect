@@ -17,8 +17,6 @@ import { db } from "@/lib/firebase/config";
 import {
   Users,
   Search,
-  Ban,
-  CheckCircle2,
   Scale,
   UserRound,
 } from "lucide-react";
@@ -43,7 +41,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     fetchUsers(true);
-  }, [roleFilter]);
+  }, [roleFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchUsers(reset = false) {
     if (reset) setLoading(true);

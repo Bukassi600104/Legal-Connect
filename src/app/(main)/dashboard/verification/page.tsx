@@ -43,7 +43,7 @@ export default function VerificationPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { setLoading(false); return; }
+    if (!user) return;
 
     async function checkExisting() {
       try {
@@ -75,7 +75,7 @@ export default function VerificationPage() {
       }
     }
 
-    checkExisting();
+    void checkExisting();
   }, [user, authLoading]);
 
   async function uploadFile(file: File, path: string): Promise<string> {
@@ -116,7 +116,9 @@ export default function VerificationPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   const isVerified = lawyerProfile?.verification_status === "verified";
   const isPending =

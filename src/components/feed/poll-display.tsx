@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { doc, setDoc, deleteDoc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
@@ -18,11 +18,17 @@ export function PollDisplay({ postId, poll }: PollDisplayProps) {
   const [options, setOptions] = useState(poll.options);
   const [totalVotes, setTotalVotes] = useState(poll.total_votes);
   const [loading, setLoading] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const endsAt = typeof poll.ends_at === "string"
     ? new Date(poll.ends_at)
     : poll.ends_at.toDate?.() ?? new Date();
-  const isExpired = endsAt < new Date();
+  const isExpired = endsAt.getTime() < now;
   const showResults = voted !== null || isExpired;
 
   const handleVote = async (optionIndex: number) => {
@@ -66,7 +72,7 @@ export function PollDisplay({ postId, poll }: PollDisplayProps) {
 
   const getTimeRemaining = () => {
     if (isExpired) return "Final results";
-    const diff = endsAt.getTime() - Date.now();
+    const diff = endsAt.getTime() - now;
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
     if (hours > 24) return `${Math.floor(hours / 24)}d left`;

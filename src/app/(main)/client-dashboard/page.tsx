@@ -11,14 +11,7 @@ import {
   limit as firestoreLimit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import {
-  Calendar,
-  MessageCircle,
-  Search,
-  ArrowRight,
-  Clock,
-  ChevronRight,
-} from "lucide-react";
+import { Calendar, MessageCircle, Search, Clock, ChevronRight } from "lucide-react";
 import { PageLoader } from "@/components/shared/loading-spinner";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { Consultation } from "@/types";
@@ -32,7 +25,7 @@ export default function ClientDashboardPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { setLoading(false); return; }
+    if (!user) return;
 
     async function fetchData() {
       try {
@@ -55,10 +48,12 @@ export default function ClientDashboardPage() {
       }
     }
 
-    fetchData();
+    void fetchData();
   }, [user, authLoading]);
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   const quickLinks = [
     {

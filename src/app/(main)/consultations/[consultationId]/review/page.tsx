@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   doc,
@@ -30,7 +30,6 @@ export const dynamic = "force-dynamic";
 
 export default function ReviewPage() {
   const params = useParams();
-  const router = useRouter();
   const consultationId = params.consultationId as string;
   const { user, loading: authLoading } = useAuth();
 
@@ -47,13 +46,12 @@ export default function ReviewPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { setLoading(false); return; }
+    if (!user) return;
 
     async function fetchData() {
       try {
         const consultDoc = await getDoc(doc(db, "consultations", consultationId));
         if (!consultDoc.exists()) {
-          setLoading(false);
           return;
         }
 
@@ -81,7 +79,7 @@ export default function ReviewPage() {
       }
     }
 
-    fetchData();
+    void fetchData();
   }, [user, consultationId, authLoading]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -124,7 +122,9 @@ export default function ReviewPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (authLoading || (user && loading)) return <PageLoader />;
+
+  if (!user) return null;
 
   if (success) {
     return (
