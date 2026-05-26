@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/shared/logo";
 
 const footerLinks = {
   platform: {
@@ -39,11 +40,11 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="font-serif text-lg font-bold text-white">
-                Legal<span className="text-gold">Connect</span>
-              </span>
-            </div>
+            <Logo
+              href="/"
+              size="default"
+              className="mb-4 [&_span:last-child]:text-white"
+            />
             <p className="text-sm leading-relaxed text-white/60">
               Connecting clients with verified legal professionals across
               Nigeria. Trusted, transparent, accessible.

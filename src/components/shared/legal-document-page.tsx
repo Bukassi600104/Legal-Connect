@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Scale } from "lucide-react";
+import { LogoMark } from "@/components/shared/logo";
 
 interface LegalSection {
   title: string;
@@ -26,7 +26,7 @@ export function LegalDocumentPage({
           href="/"
           className="inline-flex items-center gap-2 text-[15px] font-bold text-brand hover:text-brand-dark"
         >
-          <Scale className="size-4" />
+          <LogoMark className="size-5" />
           LegalConnect NG
         </Link>
 
