@@ -25,13 +25,6 @@ function getAppUrl(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!PAYSTACK_SECRET_KEY) {
-      return NextResponse.json(
-        { error: "Payment provider is not configured" },
-        { status: 500 }
-      );
-    }
-
     const cookieStore = await cookies();
     const session = cookieStore.get("session")?.value;
 
@@ -39,6 +32,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
+      );
+    }
+
+    if (!PAYSTACK_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Payment provider is not configured" },
+        { status: 500 }
       );
     }
 

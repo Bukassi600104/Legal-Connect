@@ -9,22 +9,57 @@ import { Suspense } from "react";
 function CallbackContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading"
-  );
+  const [status, setStatus] = useState<
+    "loading" | "success" | "pending" | "error"
+  >(() => (reference ? "loading" : "error"));
 
   useEffect(() => {
     if (!reference) return;
 
-    // Give webhook time to process
-    const timer = setTimeout(() => {
-      setStatus("success");
-    }, 2000);
+    let cancelled = false;
+    let attempts = 0;
 
-    return () => clearTimeout(timer);
+    async function verifyPayment() {
+      attempts += 1;
+
+      try {
+        const response = await fetch(
+          `/api/paystack/verify?reference=${encodeURIComponent(reference!)}`,
+          { cache: "no-store" }
+        );
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        if (response.ok && data.status === "success") {
+          setStatus("success");
+          return;
+        }
+
+        if (data.status === "error") {
+          setStatus("error");
+          return;
+        }
+
+        if (attempts >= 8) {
+          setStatus("pending");
+          return;
+        }
+
+        setTimeout(verifyPayment, 1500);
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    }
+
+    void verifyPayment();
+
+    return () => {
+      cancelled = true;
+    };
   }, [reference]);
 
-  const displayStatus = reference ? status : "error";
+  const displayStatus = status;
 
   return (
     <div className="px-8 py-16 text-center">
@@ -72,6 +107,25 @@ function CallbackContent() {
             className="mt-6 inline-flex h-9 items-center rounded-full bg-brand px-5 text-[15px] font-bold text-white hover:bg-brand-dark transition-colors"
           >
             Try Again
+          </Link>
+        </>
+      )}
+
+      {displayStatus === "pending" && (
+        <>
+          <Loader2 className="size-12 text-brand mx-auto" />
+          <h2 className="mt-4 text-[23px] font-extrabold text-text-primary">
+            Payment Received
+          </h2>
+          <p className="mt-2 text-[15px] text-muted-text max-w-sm mx-auto">
+            We could not confirm activation yet. Please check your subscription
+            page in a moment.
+          </p>
+          <Link
+            href="/dashboard/subscription"
+            className="mt-6 inline-flex h-9 items-center rounded-full bg-brand px-5 text-[15px] font-bold text-white hover:bg-brand-dark transition-colors"
+          >
+            View Subscription
           </Link>
         </>
       )}
