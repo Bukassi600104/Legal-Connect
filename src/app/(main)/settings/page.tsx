@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
 
 export const dynamic = "force-dynamic";
 
@@ -181,10 +182,11 @@ export default function SettingsPage() {
           <form onSubmit={handleSave} className="space-y-4">
             <div className="flex items-center gap-4 mb-4">
               {profile?.avatar_url ? (
-                <img
+                <OptimizedAvatar
                   src={profile.avatar_url}
                   alt={profile.full_name}
-                  className="size-16 rounded-full object-cover"
+                  className="size-16"
+                  sizes="64px"
                 />
               ) : (
                 <div className="size-16 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-2xl">

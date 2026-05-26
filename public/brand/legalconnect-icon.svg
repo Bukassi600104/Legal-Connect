@@ -1,0 +1,7 @@
+<svg viewBox="0 0 64 64" role="img" aria-label="LegalConnect NG icon" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="18" fill="#1A8CD8"/>
+  <path d="M20 17V47H38" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M45 21C39.4 16.5 29 18.7 29 32C29 45.2 39.4 47.5 45 43" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M28 25H42M35 25V18" stroke="#DFF3FF" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M25 31L21 38H29L25 31ZM45 31L41 38H49L45 31Z" fill="#DFF3FF"/>
+</svg>

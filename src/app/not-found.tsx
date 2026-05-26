@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Scale } from "lucide-react";
+import { LogoMark } from "@/components/shared/logo";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="text-center max-w-md">
-        <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-brand/10">
-          <Scale className="size-10 text-brand" />
+        <div className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-brand/10">
+          <LogoMark className="size-12" />
         </div>
         <h1 className="mt-6 text-4xl font-extrabold text-text-primary">404</h1>
         <h2 className="mt-2 text-lg font-extrabold text-text-primary">

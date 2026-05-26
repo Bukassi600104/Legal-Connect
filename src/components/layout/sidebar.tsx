@@ -12,12 +12,13 @@ import {
   Shield,
   Settings,
   MoreHorizontal,
-  Scale,
   PenSquare,
   Star,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { PremiumBadge } from "@/components/shared/premium-badge";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
+import { LogoMark } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 
 interface SidebarLink {
@@ -113,7 +114,7 @@ export function Sidebar() {
             href="/feed"
             className="inline-flex size-[50px] items-center justify-center rounded-full transition-colors hover:bg-brand/10"
           >
-            <Scale className="size-7 text-brand" />
+            <LogoMark className="size-9" />
           </Link>
         </div>
 
@@ -149,10 +150,10 @@ export function Sidebar() {
             className="mb-3 flex items-center gap-3 rounded-full p-3 transition-colors hover:bg-[#E7E9EA]"
           >
             {profile.avatar_url ? (
-              <img
+              <OptimizedAvatar
                 src={profile.avatar_url}
                 alt={profile.full_name}
-                className="size-10 shrink-0 rounded-full object-cover"
+                className="size-10"
               />
             ) : (
               <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">

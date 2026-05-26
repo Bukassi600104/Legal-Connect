@@ -3,8 +3,9 @@
 import Link from "next/link";
 import {
   Settings,
-  Scale,
 } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
+import { LogoMark } from "@/components/shared/logo";
 import { useAuth } from "@/components/providers/auth-provider";
 
 interface NavbarProps {
@@ -29,10 +30,11 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
               className="size-8 rounded-full overflow-hidden"
             >
               {profile?.avatar_url ? (
-                <img
+                <OptimizedAvatar
                   src={profile.avatar_url}
                   alt={profile.full_name || "User"}
-                  className="size-8 rounded-full object-cover"
+                  className="size-8"
+                  sizes="32px"
                 />
               ) : (
                 <div className="size-8 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-xs">
@@ -42,14 +44,14 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
             </button>
           ) : (
             <Link href="/" className="inline-flex items-center justify-center size-8">
-              <Scale className="size-5 text-brand" />
+              <LogoMark className="size-7" />
             </Link>
           )}
         </div>
 
         {/* Center: Logo */}
         <Link href="/feed" className="inline-flex items-center justify-center">
-          <Scale className="size-7 text-brand" />
+          <LogoMark className="size-8" />
         </Link>
 
         {/* Right: Actions */}

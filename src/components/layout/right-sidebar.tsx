@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase/config";
 import { Input } from "@/components/ui/input";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { PremiumBadge } from "@/components/shared/premium-badge";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 
 interface TrendingTopic {
@@ -170,10 +171,10 @@ export function RightSidebar() {
               className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-black/[0.03]"
             >
               {lawyer.avatar_url ? (
-                <img
+                <OptimizedAvatar
                   src={lawyer.avatar_url}
                   alt={lawyer.full_name}
-                  className="size-10 shrink-0 rounded-full object-cover"
+                  className="size-10"
                 />
               ) : (
                 <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">

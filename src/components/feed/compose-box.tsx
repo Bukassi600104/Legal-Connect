@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { POST_CATEGORY_LABELS } from "@/lib/constants";
 import { getPremiumLimits } from "@/lib/feature-gate";
@@ -78,10 +79,10 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
       <div className="flex gap-3">
         {/* Avatar */}
         {profile.avatar_url ? (
-          <img
+          <OptimizedAvatar
             src={profile.avatar_url}
             alt={profile.full_name}
-            className="size-10 shrink-0 rounded-full object-cover"
+            className="size-10"
           />
         ) : (
           <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">

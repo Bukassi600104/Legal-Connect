@@ -25,6 +25,10 @@ import { PremiumBadge } from "@/components/shared/premium-badge";
 import { CategoryPill } from "@/components/shared/category-pill";
 import { PollDisplay } from "@/components/feed/poll-display";
 import { useAuth } from "@/components/providers/auth-provider";
+import {
+  OptimizedAvatar,
+  OptimizedMediaImage,
+} from "@/components/shared/optimized-image";
 import { cn } from "@/lib/utils";
 import type { Post, UserProfile, LawyerProfile } from "@/types";
 import { formatDistanceToNow } from "date-fns";
@@ -142,10 +146,10 @@ export function PostCard({ post }: PostCardProps) {
         {/* Author avatar */}
         <Link href={authorHref} className="shrink-0">
           {post.author?.avatar_url ? (
-            <img
+            <OptimizedAvatar
               src={post.author.avatar_url}
               alt={post.author.full_name || "User"}
-              className="size-10 rounded-full object-cover"
+              className="size-10"
             />
           ) : (
             <div className="size-10 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">
@@ -227,11 +231,10 @@ export function PostCard({ post }: PostCardProps) {
           {/* Media */}
           {post.media_urls && post.media_urls.length > 0 && (
             <div className="mt-3 overflow-hidden rounded-2xl border border-border-custom">
-              <img
+              <OptimizedMediaImage
                 src={post.media_urls[0]}
                 alt="Post media"
-                className="h-auto w-full object-cover"
-                style={{ maxHeight: "510px" }}
+                className="max-h-[510px]"
               />
             </div>
           )}

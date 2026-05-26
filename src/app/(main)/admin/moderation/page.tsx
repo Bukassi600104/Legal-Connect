@@ -20,6 +20,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { PageLoader } from "@/components/shared/loading-spinner";
+import { OptimizedMediaImage } from "@/components/shared/optimized-image";
 import {
   Dialog,
   DialogContent,
@@ -219,11 +220,12 @@ export default function ModerationPage() {
             {selectedPost?.media_urls && selectedPost.media_urls.length > 0 && (
               <div className="flex gap-2 overflow-x-auto">
                 {selectedPost.media_urls.map((url, i) => (
-                  <img
+                  <OptimizedMediaImage
                     key={i}
                     src={url}
                     alt={`Media ${i + 1}`}
-                    className="h-32 w-auto rounded-2xl object-cover"
+                    className="h-32 w-auto rounded-2xl"
+                    sizes="128px"
                   />
                 ))}
               </div>

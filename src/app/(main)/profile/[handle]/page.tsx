@@ -29,6 +29,10 @@ import { db } from "@/lib/firebase/config";
 import { PostCard } from "@/components/feed/post-card";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { PremiumBadge } from "@/components/shared/premium-badge";
+import {
+  OptimizedAvatar,
+  OptimizedFillImage,
+} from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -251,10 +255,9 @@ export default function ProfilePage() {
       {/* Banner */}
       <div className="h-[200px] bg-brand/20 relative z-[1]">
         {profileUser.banner_url && (
-          <img
+          <OptimizedFillImage
             src={profileUser.banner_url}
             alt="Banner"
-            className="w-full h-full object-cover"
           />
         )}
       </div>
@@ -265,10 +268,11 @@ export default function ProfilePage() {
           {/* Avatar */}
           <div className="size-[134px] rounded-full border-4 border-white overflow-hidden bg-white shadow-md">
             {profileUser.avatar_url ? (
-              <img
+              <OptimizedAvatar
                 src={profileUser.avatar_url}
                 alt={profileUser.full_name}
-                className="size-full rounded-full object-cover"
+                className="size-full"
+                sizes="134px"
               />
             ) : (
               <div className="size-full rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-4xl">

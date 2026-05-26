@@ -12,7 +12,6 @@ import {
   Shield,
   Settings,
   LogOut,
-  Scale,
 } from "lucide-react";
 import {
   Sheet,
@@ -23,6 +22,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TierBadge } from "@/components/shared/tier-badge";
+import { LogoMark } from "@/components/shared/logo";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
@@ -133,7 +133,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Scale className="size-6 text-brand" />
+                  <LogoMark className="size-7" />
                   <span className="font-bold text-text-primary">LegalConnect</span>
                 </div>
               )}

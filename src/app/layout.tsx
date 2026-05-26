@@ -28,6 +28,10 @@ export const metadata: Metadata = {
     "law firm",
   ],
   authors: [{ name: "LegalConnect NG" }],
+  icons: {
+    icon: "/brand/legalconnect-icon.svg",
+    apple: "/brand/legalconnect-icon.svg",
+  },
   openGraph: {
     title: "LegalConnect NG | Find Trusted Lawyers in Nigeria",
     description:

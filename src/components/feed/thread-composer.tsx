@@ -5,6 +5,7 @@ import { Plus, X, Loader2 } from "lucide-react";
 import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/components/providers/auth-provider";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { getPremiumLimits } from "@/lib/feature-gate";
 import { extractHashtags, updateHashtagCounts } from "@/lib/hashtag-utils";
 
@@ -123,10 +124,10 @@ export function ThreadComposer({ onThreadCreated, onCancel }: ThreadComposerProp
               {/* Connector line */}
               <div className="flex flex-col items-center">
                 {profile.avatar_url ? (
-                  <img
+                  <OptimizedAvatar
                     src={profile.avatar_url}
                     alt={profile.full_name}
-                    className="size-10 shrink-0 rounded-full object-cover"
+                    className="size-10"
                   />
                 ) : (
                   <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">

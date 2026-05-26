@@ -22,6 +22,10 @@ import { db } from "@/lib/firebase/config";
 import { TierBadge } from "@/components/shared/tier-badge";
 import { PremiumBadge } from "@/components/shared/premium-badge";
 import { PageLoader } from "@/components/shared/loading-spinner";
+import {
+  OptimizedAvatar,
+  OptimizedFillImage,
+} from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useFollow } from "@/hooks/use-follow";
 import { cn } from "@/lib/utils";
@@ -185,16 +189,14 @@ export default function LawyerProfilePage() {
       {/* Banner / cover image */}
       <div className="h-[200px] bg-brand/20 relative z-[1]">
         {lawyer.cover_image_url ? (
-          <img
+          <OptimizedFillImage
             src={lawyer.cover_image_url}
             alt="Cover"
-            className="h-full w-full object-cover"
           />
         ) : userProfile.banner_url ? (
-          <img
+          <OptimizedFillImage
             src={userProfile.banner_url}
             alt="Banner"
-            className="h-full w-full object-cover"
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-brand/30 to-brand/10" />
@@ -207,10 +209,11 @@ export default function LawyerProfilePage() {
         <div className="flex items-end justify-between -mt-[67px] mb-3">
           <div className="size-[134px] rounded-full border-4 border-white bg-white overflow-hidden shadow-md">
             {userProfile.avatar_url ? (
-              <img
+              <OptimizedAvatar
                 src={userProfile.avatar_url}
                 alt={userProfile.full_name}
-                className="size-full rounded-full object-cover"
+                className="size-full"
+                sizes="134px"
               />
             ) : (
               <div className="size-full rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-[48px]">
@@ -430,10 +433,10 @@ export default function LawyerProfilePage() {
                 className="flex gap-3 px-4 py-3 border-b border-border-custom hover:bg-black/[0.03] transition-colors"
               >
                 {userProfile.avatar_url ? (
-                  <img
+                  <OptimizedAvatar
                     src={userProfile.avatar_url}
                     alt={userProfile.full_name}
-                    className="size-10 shrink-0 rounded-full object-cover"
+                    className="size-10"
                   />
                 ) : (
                   <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-[15px]">
@@ -600,10 +603,10 @@ export default function LawyerProfilePage() {
                 >
                   <div className="flex items-start gap-3">
                     {review.client?.avatar_url ? (
-                      <img
+                      <OptimizedAvatar
                         src={review.client.avatar_url}
                         alt={review.client.full_name}
-                        className="size-10 shrink-0 rounded-full object-cover"
+                        className="size-10"
                       />
                     ) : (
                       <div className="size-10 shrink-0 rounded-full bg-[#EFF3F4] flex items-center justify-center text-muted-text font-bold text-[15px]">

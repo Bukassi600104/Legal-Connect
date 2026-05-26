@@ -33,6 +33,7 @@ import {
 import { PremiumBadge } from "@/components/shared/premium-badge";
 import { TierBadge } from "@/components/shared/tier-badge";
 import { PageLoader } from "@/components/shared/loading-spinner";
+import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { NIGERIAN_STATES, SPECIALIZATION_SEEDS } from "@/types";
 import type { LawyerProfile, UserProfile } from "@/types";
 import { cn } from "@/lib/utils";
@@ -574,10 +575,11 @@ function LawyerRow({ lawyer }: { lawyer: LawyerWithUser }) {
     >
       {/* Avatar */}
       {lawyer.userProfile?.avatar_url ? (
-        <img
+        <OptimizedAvatar
           src={lawyer.userProfile.avatar_url}
           alt={lawyer.userProfile.full_name}
-          className="size-12 shrink-0 rounded-full object-cover"
+          className="size-12"
+          sizes="48px"
         />
       ) : (
         <div className="size-12 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-[17px]">
@@ -683,10 +685,11 @@ function PersonRow({ person }: { person: UserProfile }) {
     >
       {/* Avatar */}
       {person.avatar_url ? (
-        <img
+        <OptimizedAvatar
           src={person.avatar_url}
           alt={person.full_name}
-          className="size-12 shrink-0 rounded-full object-cover"
+          className="size-12"
+          sizes="48px"
         />
       ) : (
         <div className="size-12 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-[17px]">

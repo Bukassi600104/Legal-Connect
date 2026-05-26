@@ -1,0 +1,10 @@
+<svg viewBox="0 0 330 72" role="img" aria-label="LegalConnect NG" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="64" height="64" rx="18" fill="#1A8CD8"/>
+  <path d="M24 21V51H42" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M49 25C43.4 20.5 33 22.7 33 36C33 49.2 43.4 51.5 49 47" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M32 29H46M39 29V22" stroke="#DFF3FF" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M29 35L25 42H33L29 35ZM49 35L45 42H53L49 35Z" fill="#DFF3FF"/>
+  <text x="86" y="46" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#0F1419">Legal</text>
+  <text x="168" y="46" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#1A8CD8">Connect</text>
+  <text x="292" y="46" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#536471">NG</text>
+</svg>

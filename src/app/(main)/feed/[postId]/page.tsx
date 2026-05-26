@@ -33,6 +33,7 @@ import {
 import { PollDisplay } from "@/components/feed/poll-display";
 import { ThreadView } from "@/components/feed/thread-view";
 import { PageLoader } from "@/components/shared/loading-spinner";
+import { OptimizedMediaImage } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
@@ -338,12 +339,11 @@ export default function PostDetailPage() {
         {post.media_urls && post.media_urls.length > 0 && (
           <div className="mt-3 rounded-2xl overflow-hidden border border-border-custom">
             {post.media_urls.map((url, i) => (
-              <img
+              <OptimizedMediaImage
                 key={i}
                 src={url}
                 alt={`Media ${i + 1}`}
-                className="w-full object-cover"
-                style={{ maxHeight: "500px" }}
+                className="max-h-[500px]"
               />
             ))}
           </div>
