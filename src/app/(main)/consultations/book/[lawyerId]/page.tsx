@@ -6,12 +6,6 @@ import Link from "next/link";
 import {
   doc,
   getDoc,
-  addDoc,
-  collection,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import {
@@ -103,33 +97,23 @@ export default function BookConsultationPage() {
     try {
       const scheduledAt = new Date(`${date}T${time}`);
 
-      let conversationId: string | undefined;
-      const convoQuery = query(
-        collection(db, "conversations"),
-        where("participants", "array-contains", user.uid)
-      );
-      const convoSnap = await getDocs(convoQuery);
-      const existingConvo = convoSnap.docs.find((d) => {
-        const data = d.data();
-        return data.participants?.includes(lawyerId);
-      });
-
-      if (existingConvo) {
-        conversationId = existingConvo.id;
-      }
-
-      await addDoc(collection(db, "consultations"), {
-        lawyer_id: lawyerId,
-        client_id: user.uid,
-        conversation_id: conversationId || null,
+      const response = await fetch("/api/consultations/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lawyer_id: lawyerId,
         consultation_type: consultType,
-        scheduled_at: scheduledAt,
+          scheduled_at: scheduledAt.toISOString(),
         duration_minutes: duration,
-        status: "pending",
         topic: topic.trim() || null,
         notes: notes.trim() || null,
-        created_at: serverTimestamp(),
+        }),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Consultation booking failed");
+      }
 
       setSuccess(true);
     } catch (error) {

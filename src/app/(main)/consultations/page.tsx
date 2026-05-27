@@ -9,9 +9,7 @@ import {
   getDocs,
   doc,
   getDoc,
-  updateDoc,
   orderBy,
-  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import {
@@ -169,10 +167,20 @@ export default function ConsultationsPage() {
   ) {
     setProcessing(consultId);
     try {
-      await updateDoc(doc(db, "consultations", consultId), {
-        status: newStatus,
-        updated_at: serverTimestamp(),
+      const response = await fetch("/api/consultations/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consultation_id: consultId,
+          status: newStatus,
+        }),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Consultation status update failed");
+      }
+
       setConsultations((prev) =>
         prev.map((c) =>
           c.id === consultId ? { ...c, status: newStatus } : c
