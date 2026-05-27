@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  addDoc,
   collection,
   query,
   where,
   getDocs,
-  serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase/config";
@@ -98,15 +96,21 @@ export default function VerificationPage() {
         uploadFile(idDocument, `verification/${user.uid}/id_document_${timestamp}`),
       ]);
 
-      await addDoc(collection(db, "verification_requests"), {
-        lawyer_id: user.uid,
+      const response = await fetch("/api/verification/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
         scn: scn.trim(),
         call_to_bar_cert_url: certUrl,
         practicing_fee_receipt_url: feeUrl,
         id_document_url: idUrl,
-        status: "pending",
-        submitted_at: serverTimestamp(),
+        }),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Verification request failed");
+      }
 
       setSuccess(true);
     } catch (error) {
