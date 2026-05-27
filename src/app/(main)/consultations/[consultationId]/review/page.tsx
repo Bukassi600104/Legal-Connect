@@ -6,13 +6,10 @@ import Link from "next/link";
 import {
   doc,
   getDoc,
-  addDoc,
-  updateDoc,
   collection,
   query,
   where,
   getDocs,
-  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import {
@@ -88,30 +85,19 @@ export default function ReviewPage() {
 
     setSubmitting(true);
     try {
-      await addDoc(collection(db, "reviews"), {
-        lawyer_id: consultation.lawyer_id,
-        client_id: user.uid,
-        consultation_id: consultationId,
-        rating,
-        content: content.trim() || null,
-        created_at: serverTimestamp(),
+      const response = await fetch("/api/reviews/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consultation_id: consultationId,
+          rating,
+          content: content.trim() || null,
+        }),
       });
 
-      const lawyerProfileRef = doc(db, "lawyer_profiles", consultation.lawyer_id);
-      const profileDoc = await getDoc(lawyerProfileRef);
-
-      if (profileDoc.exists()) {
-        const data = profileDoc.data();
-        const currentCount = data.rating_count || 0;
-        const currentAvg = data.rating_avg || 0;
-        const newCount = currentCount + 1;
-        const newAvg = (currentAvg * currentCount + rating) / newCount;
-
-        await updateDoc(lawyerProfileRef, {
-          rating_count: newCount,
-          rating_avg: Math.round(newAvg * 10) / 10,
-          updated_at: serverTimestamp(),
-        });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Review submission failed");
       }
 
       setSuccess(true);
