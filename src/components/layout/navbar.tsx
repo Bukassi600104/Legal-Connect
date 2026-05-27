@@ -43,9 +43,7 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
               )}
             </button>
           ) : (
-            <Link href="/" className="inline-flex items-center justify-center size-8">
-              <LogoMark className="size-7" />
-            </Link>
+            <div className="size-8" />
           )}
         </div>
 

@@ -21,7 +21,7 @@ export function AppShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen justify-center bg-white">
+    <div className="min-h-screen overflow-x-hidden bg-white lg:flex lg:justify-center">
       {/* Mobile top navbar (hidden on desktop) */}
       <Navbar onMobileMenuToggle={() => setMobileNavOpen(true)} />
 
@@ -29,12 +29,12 @@ export function AppShell({
       <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
 
       {/* X-style 3-column layout */}
-      <div className="flex w-full max-w-[1265px]">
+      <div className="mx-auto flex w-full max-w-[1265px] justify-center lg:mx-0 lg:justify-start">
         {/* Left Sidebar — fixed, X-style nav */}
         {showSidebar && <Sidebar />}
 
         {/* Main content — center column with border */}
-        <main className="flex-1 min-w-0 max-w-[600px] border-r border-border-custom pb-16 lg:pb-0">
+        <main className="w-full min-w-0 max-w-[600px] border-r border-border-custom pb-16 lg:flex-1 lg:pb-0">
           {children}
         </main>
 
