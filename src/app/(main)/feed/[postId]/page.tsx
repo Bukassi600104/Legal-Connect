@@ -7,15 +7,10 @@ import {
   doc,
   getDoc,
   getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
   collection,
   query,
   where,
   orderBy,
-  increment,
-  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import {
@@ -159,21 +154,28 @@ export default function PostDetailPage() {
     setCommentText("");
 
     try {
-      await addDoc(collection(db, "post_comments"), {
-        post_id: postId,
-        user_id: user.uid,
-        content: text,
-        like_count: 0,
-        created_at: serverTimestamp(),
+      const response = await fetch("/api/posts/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post_id: postId, content: text }),
       });
 
-      await updateDoc(doc(db, "posts", postId), {
-        comment_count: increment(1),
-      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Comment creation failed");
+      }
 
       await fetchComments();
       setPost((prev) =>
-        prev ? { ...prev, comment_count: prev.comment_count + 1 } : prev
+        prev
+          ? {
+              ...prev,
+              comment_count:
+                typeof data.comment_count === "number"
+                  ? data.comment_count
+                  : prev.comment_count + 1,
+            }
+          : prev
       );
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -185,14 +187,27 @@ export default function PostDetailPage() {
 
   async function handleDeleteComment(commentId: string) {
     try {
-      await deleteDoc(doc(db, "post_comments", commentId));
-      await updateDoc(doc(db, "posts", postId), {
-        comment_count: increment(-1),
+      const response = await fetch("/api/posts/comments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment_id: commentId }),
       });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Comment deletion failed");
+      }
+
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       setPost((prev) =>
         prev
-          ? { ...prev, comment_count: Math.max(0, prev.comment_count - 1) }
+          ? {
+              ...prev,
+              comment_count:
+                typeof data.comment_count === "number"
+                  ? data.comment_count
+                  : Math.max(0, prev.comment_count - 1),
+            }
           : prev
       );
     } catch (error) {
