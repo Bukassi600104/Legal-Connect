@@ -101,7 +101,6 @@ service cloud.firestore {
       allow create: if false;
       allow update: if isAuthenticated() &&
         (
-          isAdmin() ||
           (
             request.auth.uid == resource.data.author_id &&
             onlyChanged(['is_pinned', 'updated_at'])
@@ -109,7 +108,11 @@ service cloud.firestore {
           onlyChanged(['like_count', 'comment_count', 'share_count', 'view_count'])
         );
       allow delete: if isAuthenticated() &&
-        (request.auth.uid == resource.data.author_id || isAdmin());
+        request.auth.uid == resource.data.author_id;
+    }
+
+    match /moderation_actions/{actionId} {
+      allow read, write: if false;
     }
 
     // ============ POST LIKES ============

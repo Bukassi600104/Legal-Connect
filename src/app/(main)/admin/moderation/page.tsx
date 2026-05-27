@@ -7,7 +7,6 @@ import {
   getDocs,
   doc,
   getDoc,
-  deleteDoc,
   orderBy,
   limit as firestoreLimit,
 } from "firebase/firestore";
@@ -91,7 +90,20 @@ export default function ModerationPage() {
     setProcessing(true);
 
     try {
-      await deleteDoc(doc(db, "posts", postId));
+      const response = await fetch("/api/admin/moderation/remove-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          post_id: postId,
+          reason: "Removed from admin moderation queue",
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Post removal failed");
+      }
+
       setPosts((prev) => prev.filter((p) => p.id !== postId));
       setSelectedPost(null);
     } catch (error) {
