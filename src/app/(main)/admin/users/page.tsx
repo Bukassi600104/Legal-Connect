@@ -5,8 +5,6 @@ import {
   collection,
   query,
   getDocs,
-  doc,
-  updateDoc,
   orderBy,
   where,
   limit as firestoreLimit,
@@ -105,12 +103,24 @@ export default function AdminUsersPage() {
   async function toggleUserActive(userId: string, currentlyActive: boolean) {
     setTogglingId(userId);
     try {
-      await updateDoc(doc(db, "users", userId), {
-        is_active: !currentlyActive,
+      const nextActive = !currentlyActive;
+      const response = await fetch("/api/admin/users/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          is_active: nextActive,
+        }),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "User status update failed");
+      }
+
       setUsers((prev) =>
         prev.map((u) =>
-          u.id === userId ? { ...u, is_active: !currentlyActive } : u
+          u.id === userId ? { ...u, is_active: nextActive } : u
         )
       );
     } catch (error) {

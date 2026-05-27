@@ -8,8 +8,6 @@ import {
   getDocs,
   doc,
   getDoc,
-  updateDoc,
-  serverTimestamp,
   orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
@@ -102,20 +100,20 @@ export default function VerificationQueuePage() {
     setProcessing(true);
 
     try {
-      await updateDoc(doc(db, "verification_requests", request.id), {
-        status: decision,
-        reviewed_by: user.uid,
-        review_notes: reviewNotes || null,
-        reviewed_at: serverTimestamp(),
+      const response = await fetch("/api/admin/verification/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_id: request.id,
+          decision,
+          review_notes: reviewNotes || null,
+        }),
       });
 
-      const newVerifStatus =
-        decision === "approved" ? "verified" : "rejected";
-      await updateDoc(doc(db, "lawyer_profiles", request.lawyer_id), {
-        verification_status: newVerifStatus,
-        verification_date: serverTimestamp(),
-        updated_at: serverTimestamp(),
-      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Verification review failed");
+      }
 
       setRequests((prev) => prev.filter((r) => r.id !== request.id));
       setSelectedRequest(null);

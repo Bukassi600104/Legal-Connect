@@ -38,17 +38,14 @@ service cloud.firestore {
         request.resource.data.is_premium == false;
       allow update: if isAuthenticated() &&
         (
-          isAdmin() ||
-          (
-            request.auth.uid == userId &&
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-              'role',
-              'account_type',
-              'is_active',
-              'is_premium',
-              'created_at'
-            ])
-          )
+          request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'role',
+            'account_type',
+            'is_active',
+            'is_premium',
+            'created_at'
+          ])
         );
       allow delete: if isAdmin();
     }
@@ -63,7 +60,6 @@ service cloud.firestore {
         request.resource.data.subscription_tier == 'free';
       allow update: if isAuthenticated() &&
         (
-          isAdmin() ||
           (
             request.auth.uid == profileId &&
             !request.resource.data.diff(resource.data).affectedKeys().hasAny([
@@ -265,7 +261,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
         (request.auth.uid == resource.data.lawyer_id || isAdmin());
       allow create: if isAuthenticated() && isLawyer();
-      allow update: if isAdmin();
+      allow update: if false;
     }
 
     // ============ NOTIFICATIONS ============
