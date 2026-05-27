@@ -10,7 +10,6 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  setDoc,
   collection,
   query,
   where,
@@ -203,25 +202,22 @@ export default function PostDetailPage() {
 
   async function handleLike() {
     if (!user) return;
-    const likeId = `${user.uid}_${postId}`;
-    const likeRef = doc(db, "post_likes", likeId);
-    const postRef = doc(db, "posts", postId);
 
     try {
-      if (liked) {
-        await deleteDoc(likeRef);
-        await updateDoc(postRef, { like_count: increment(-1) });
-        setLiked(false);
-        setLikeCount((c) => Math.max(0, c - 1));
-      } else {
-        await setDoc(likeRef, {
-          post_id: postId,
-          user_id: user.uid,
-          created_at: serverTimestamp(),
-        });
-        await updateDoc(postRef, { like_count: increment(1) });
-        setLiked(true);
-        setLikeCount((c) => c + 1);
+      const response = await fetch("/api/posts/interaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post_id: postId, interaction: "like" }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Post interaction failed");
+      }
+
+      setLiked(Boolean(data.active));
+      if (typeof data.like_count === "number") {
+        setLikeCount(data.like_count);
       }
     } catch (error) {
       console.error("Error toggling like:", error);
@@ -230,21 +226,20 @@ export default function PostDetailPage() {
 
   async function handleBookmark() {
     if (!user) return;
-    const bookmarkId = `${user.uid}_${postId}`;
-    const bookmarkRef = doc(db, "post_bookmarks", bookmarkId);
 
     try {
-      if (bookmarked) {
-        await deleteDoc(bookmarkRef);
-        setBookmarked(false);
-      } else {
-        await setDoc(bookmarkRef, {
-          post_id: postId,
-          user_id: user.uid,
-          created_at: serverTimestamp(),
-        });
-        setBookmarked(true);
+      const response = await fetch("/api/posts/interaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post_id: postId, interaction: "bookmark" }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Post interaction failed");
       }
+
+      setBookmarked(Boolean(data.active));
     } catch (error) {
       console.error("Error toggling bookmark:", error);
     }
