@@ -26,6 +26,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    const userDoc = await adminDb.doc(`users/${uid}`).get();
+    const handle =
+      userDoc.exists && typeof userDoc.data()?.handle === "string"
+        ? userDoc.data()?.handle
+        : null;
+
     // Delete Firestore documents
     try {
       // Delete lawyer profile if exists
@@ -36,6 +42,12 @@ export async function POST(request: NextRequest) {
       // Delete user profile
       await adminDb.doc(`users/${uid}`).delete();
     } catch {}
+
+    if (handle) {
+      try {
+        await adminDb.doc(`handles/${handle}`).delete();
+      } catch {}
+    }
 
     // Delete user from Firebase Auth
     try {

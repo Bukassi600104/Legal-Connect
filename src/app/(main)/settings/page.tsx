@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
-import { updateProfile, deleteUser } from "firebase/auth";
-import { db, auth } from "@/lib/firebase/config";
-import { validateHandle, isHandleAvailable, claimHandle } from "@/lib/handle-utils";
+import { validateHandle, isHandleAvailable } from "@/lib/handle-utils";
 import {
   LogOut,
   Loader2,
@@ -63,7 +60,6 @@ export default function SettingsPage() {
       const cleanedHandle = handle.toLowerCase().trim();
       const handleChanged = cleanedHandle !== profile?.handle;
 
-      // If handle changed, validate and claim
       if (handleChanged && cleanedHandle) {
         if (!validateHandle(cleanedHandle)) {
           setHandleStatus("invalid");
@@ -76,24 +72,22 @@ export default function SettingsPage() {
           setSaving(false);
           return;
         }
-        // Release old handle, claim new
-        if (profile?.handle) {
-          try { await deleteDoc(doc(db, "handles", profile.handle)); } catch {}
-        }
-        await claimHandle(cleanedHandle, user.uid);
       }
 
-      await updateDoc(doc(db, "users", user.uid), {
-        full_name: fullName.trim(),
-        phone: phone.trim() || null,
-        ...(handleChanged && cleanedHandle ? { handle: cleanedHandle } : {}),
-        updated_at: serverTimestamp(),
+      const response = await fetch("/api/settings/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: fullName.trim(),
+          phone: phone.trim(),
+          handle: cleanedHandle || profile?.handle,
+        }),
       });
 
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, {
-          displayName: fullName.trim(),
-        });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 409) setHandleStatus("taken");
+        throw new Error(data.error || "Profile update failed");
       }
 
       await refreshProfile();
@@ -122,48 +116,25 @@ export default function SettingsPage() {
     try {
       const uid = user.uid;
 
-      if (profile?.role === "lawyer") {
-        try {
-          await deleteDoc(doc(db, "lawyer_profiles", uid));
-        } catch {}
+      const response = await fetch("/api/auth/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete account");
       }
 
-      try {
-        await deleteDoc(doc(db, "users", uid));
-      } catch {}
-
-      if (auth.currentUser) {
-        await deleteUser(auth.currentUser);
-      }
-
-      try {
-        await fetch("/api/auth/delete-account", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid }),
-        });
-      } catch {}
-
-      try {
-        await fetch("/api/auth/session", { method: "DELETE" });
-      } catch {}
+      await signOut();
 
       router.push("/");
     } catch (error) {
       console.error("Error deleting account:", error);
-      try {
-        await fetch("/api/auth/delete-account", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid: user.uid }),
-        });
-        await fetch("/api/auth/session", { method: "DELETE" });
-        router.push("/");
-      } catch {
-        alert(
-          "Failed to delete account. You may need to sign out and sign back in, then try again."
-        );
-      }
+      alert(
+        "Failed to delete account. You may need to sign out and sign back in, then try again."
+      );
     } finally {
       setDeleting(false);
     }
