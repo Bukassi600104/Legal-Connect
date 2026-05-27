@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
+import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -6,7 +7,32 @@ import { FieldValue } from "firebase-admin/firestore";
 // Seed data — 8 lawyers, 5 clients, posts, conversations, msgs
 // =============================================================
 
-const PASSWORD = "Test1234!";
+const DEFAULT_DEV_PASSWORD = "Test1234!";
+
+function isAuthorizedSeedRequest(request: NextRequest) {
+  const expectedToken = process.env.SEED_ADMIN_TOKEN;
+  const receivedToken = request.headers.get("x-seed-token");
+
+  if (!expectedToken || expectedToken.length < 32 || !receivedToken) {
+    return false;
+  }
+
+  const expectedBuffer = Buffer.from(expectedToken);
+  const receivedBuffer = Buffer.from(receivedToken);
+
+  return (
+    expectedBuffer.length === receivedBuffer.length &&
+    timingSafeEqual(expectedBuffer, receivedBuffer)
+  );
+}
+
+function getSeedPassword() {
+  if (process.env.NODE_ENV === "production") {
+    return process.env.SEED_USER_PASSWORD || null;
+  }
+
+  return process.env.SEED_USER_PASSWORD || DEFAULT_DEV_PASSWORD;
+}
 
 function diceBearBanner(name: string) {
   return `https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(name)}&backgroundColor=1a8cd8,0d6ebd,2ba3f7`;
@@ -448,7 +474,19 @@ const CONVERSATIONS = [
   },
 ];
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!isAuthorizedSeedRequest(request)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const password = getSeedPassword();
+  if (!password || password.length < 12) {
+    return NextResponse.json(
+      { error: "Seed password is not configured securely" },
+      { status: 500 }
+    );
+  }
+
   try {
     const createdUsers: { uid: string; email: string; role: string }[] = [];
 
@@ -458,7 +496,7 @@ export async function POST() {
       try {
         const userRecord = await adminAuth.createUser({
           email: lawyer.email,
-          password: PASSWORD,
+          password,
           displayName: lawyer.full_name,
           phoneNumber: lawyer.phone,
         });
@@ -539,7 +577,7 @@ export async function POST() {
       try {
         const userRecord = await adminAuth.createUser({
           email: client.email,
-          password: PASSWORD,
+          password,
           displayName: client.full_name,
           phoneNumber: client.phone,
         });
@@ -719,7 +757,6 @@ export async function POST() {
       users: createdUsers.map((u) => ({
         email: u.email,
         role: u.role,
-        password: PASSWORD,
       })),
     });
   } catch (error) {
