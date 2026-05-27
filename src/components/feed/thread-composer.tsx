@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import { Plus, X, Loader2 } from "lucide-react";
-import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/components/providers/auth-provider";
 import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { getPremiumLimits } from "@/lib/feature-gate";
-import { extractHashtags, updateHashtagCounts } from "@/lib/hashtag-utils";
 
 interface ThreadComposerProps {
   onThreadCreated?: () => void;
@@ -49,42 +46,20 @@ export function ThreadComposer({ onThreadCreated, onCancel }: ThreadComposerProp
     setPosting(true);
 
     try {
-      const batch = writeBatch(db);
-      const threadId = doc(collection(db, "posts")).id;
-      const allHashtags: string[] = [];
+      const response = await fetch("/api/posts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          posts: entries.map((entry) => ({
+            content: entry.trim(),
+            category: "general",
+          })),
+        }),
+      });
 
-      for (let i = 0; i < entries.length; i++) {
-        const postRef = doc(collection(db, "posts"));
-        const content = entries[i].trim();
-        const hashtags = extractHashtags(content);
-        allHashtags.push(...hashtags);
-
-        batch.set(postRef, {
-          author_id: profile.id,
-          content,
-          category: "general",
-          media_urls: [],
-          hashtags,
-          is_pinned: false,
-          like_count: 0,
-          comment_count: 0,
-          share_count: 0,
-          view_count: 0,
-          is_boosted: false,
-          thread_id: threadId,
-          thread_position: i,
-          is_thread_starter: i === 0,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        });
-      }
-
-      await batch.commit();
-
-      // Update hashtag counts
-      const uniqueTags = [...new Set(allHashtags)];
-      if (uniqueTags.length > 0) {
-        updateHashtagCounts(uniqueTags).catch(console.error);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Thread creation failed");
       }
 
       setEntries(["", ""]);

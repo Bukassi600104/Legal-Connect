@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { ImagePlus, Loader2, Globe } from "lucide-react";
-import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase/config";
 import {
   Select,
   SelectContent,
@@ -15,7 +13,6 @@ import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { POST_CATEGORY_LABELS } from "@/lib/constants";
 import { getPremiumLimits } from "@/lib/feature-gate";
-import { extractHashtags, updateHashtagCounts } from "@/lib/hashtag-utils";
 import type { PostCategory } from "@/types";
 
 interface ComposeBoxProps {
@@ -39,28 +36,18 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
 
     setPosting(true);
     try {
-      const hashtags = extractHashtags(content);
-
-      const postRef = doc(collection(db, "posts"));
-      await setDoc(postRef, {
-        author_id: profile.id,
-        content: content.trim(),
-        category: category || "general",
-        media_urls: [],
-        hashtags,
-        is_pinned: false,
-        like_count: 0,
-        comment_count: 0,
-        share_count: 0,
-        view_count: 0,
-        is_boosted: false,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+      const response = await fetch("/api/posts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: content.trim(),
+          category: category || "general",
+        }),
       });
 
-      // Update hashtag counts in background
-      if (hashtags.length > 0) {
-        updateHashtagCounts(hashtags).catch(console.error);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Post creation failed");
       }
 
       setContent("");

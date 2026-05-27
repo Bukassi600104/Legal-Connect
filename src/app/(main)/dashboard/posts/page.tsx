@@ -12,6 +12,7 @@ import {
   updateDoc,
   orderBy,
   limit as firestoreLimit,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import {
@@ -75,6 +76,7 @@ export default function DashboardPostsPage() {
     try {
       await updateDoc(doc(db, "posts", postId), {
         is_pinned: !currentPinned,
+        updated_at: serverTimestamp(),
       });
       setPosts((prev) =>
         prev.map((p) =>
