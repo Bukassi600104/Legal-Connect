@@ -58,21 +58,7 @@ service cloud.firestore {
         request.resource.data.user_id == request.auth.uid &&
         request.resource.data.verification_status == 'unverified' &&
         request.resource.data.subscription_tier == 'free';
-      allow update: if isAuthenticated() &&
-        (
-          (
-            request.auth.uid == profileId &&
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-              'user_id',
-              'verification_status',
-              'verification_date',
-              'subscription_tier',
-              'rating_avg',
-              'rating_count',
-              'created_at'
-            ])
-          )
-        );
+      allow update: if false;
       allow delete: if isAdmin();
     }
 

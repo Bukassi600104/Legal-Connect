@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase/config";
 import {
   ArrowLeft,
   Briefcase,
@@ -98,7 +96,10 @@ export default function EditLawyerProfilePage() {
         .map((l) => l.trim())
         .filter(Boolean);
 
-      await updateDoc(doc(db, "lawyer_profiles", user.uid), {
+      const response = await fetch("/api/lawyer-profile/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
         bio: bio.trim() || null,
         location_state: locationState,
         location_city: locationCity.trim() || null,
@@ -111,8 +112,13 @@ export default function EditLawyerProfilePage() {
         fee_range_max: feeMax ? parseInt(feeMax) : null,
         availability_status: availability,
         education: education.filter((e) => e.institution && e.degree),
-        updated_at: serverTimestamp(),
+        }),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Profile update failed");
+      }
 
       await refreshProfile();
       setSaved(true);
