@@ -19,11 +19,6 @@ import {
   getDocs,
   getDoc,
   doc,
-  setDoc,
-  deleteDoc,
-  serverTimestamp,
-  updateDoc,
-  increment,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { PostCard } from "@/components/feed/post-card";
@@ -170,28 +165,25 @@ export default function ProfilePage() {
   const handleFollow = async () => {
     if (!currentUser || !profileUser || currentUser.uid === profileUser.id) return;
 
-    const followId = `${currentUser.uid}_${profileUser.id}`;
-    const followRef = doc(db, "follows", followId);
-
     try {
-      if (isFollowing) {
-        await deleteDoc(followRef);
-        setIsFollowing(false);
-        setFollowerCount((c) => Math.max(0, c - 1));
-        await updateDoc(doc(db, "users", profileUser.id), {
-          follower_count: increment(-1),
-        });
+      const response = await fetch("/api/social/follow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_user_id: profileUser.id }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Follow update failed");
+      }
+
+      setIsFollowing(Boolean(data.active));
+      if (typeof data.follower_count === "number") {
+        setFollowerCount(data.follower_count);
       } else {
-        await setDoc(followRef, {
-          follower_id: currentUser.uid,
-          following_id: profileUser.id,
-          created_at: serverTimestamp(),
-        });
-        setIsFollowing(true);
-        setFollowerCount((c) => c + 1);
-        await updateDoc(doc(db, "users", profileUser.id), {
-          follower_count: increment(1),
-        });
+        setFollowerCount((count) =>
+          data.active ? count + 1 : Math.max(0, count - 1)
+        );
       }
     } catch (error) {
       console.error("Error toggling follow:", error);

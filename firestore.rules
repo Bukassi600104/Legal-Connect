@@ -44,6 +44,9 @@ service cloud.firestore {
             'account_type',
             'is_active',
             'is_premium',
+            'follower_count',
+            'following_count',
+            'post_count',
             'created_at'
           ])
         );
@@ -134,10 +137,7 @@ service cloud.firestore {
 
     match /follows/{followId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() &&
-        request.auth.uid == request.resource.data.follower_id;
-      allow delete: if isAuthenticated() &&
-        request.auth.uid == resource.data.follower_id;
+      allow create, delete: if false;
     }
 
     // ============ CONVERSATIONS ============
