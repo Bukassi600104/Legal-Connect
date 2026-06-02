@@ -126,42 +126,47 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen">
-      {/* X-style sticky header with tabs */}
-      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-border-custom">
-        <div className="flex items-center px-4 h-[53px] lg:hidden">
-          {/* Mobile: title shown in header */}
+      <div className="sticky top-14 z-30 border-b border-border-custom bg-white/95 backdrop-blur-md lg:top-0 lg:rounded-t-lg">
+        <div className="hidden items-center justify-between px-4 py-4 lg:flex">
+          <div>
+            <h1 className="text-[22px] font-black text-text-primary">
+              Legal briefings
+            </h1>
+            <p className="text-[13px] text-muted-text">
+              Market updates, lawyer insights, and client questions.
+            </p>
+          </div>
+          <span className="rounded-lg border border-gold/20 bg-gold-light px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-gold">
+            Launch V1
+          </span>
         </div>
-        <div className="hidden lg:flex items-center px-4 h-[53px]">
-          <h1 className="text-xl font-extrabold text-text-primary">Home</h1>
+        <div className="flex items-center px-4 py-3 lg:hidden">
+          <h1 className="text-[18px] font-black text-text-primary">
+            Legal briefings
+          </h1>
         </div>
-        <div className="flex">
+        <div className="grid grid-cols-2 gap-2 px-4 pb-4">
           <button
             onClick={() => setActiveTab("for-you")}
             className={cn(
-              "flex-1 flex items-center justify-center py-3 text-[15px] font-medium transition-colors hover:bg-black/[0.03] relative",
+              "flex h-10 items-center justify-center rounded-lg border text-[15px] font-bold transition-colors",
               activeTab === "for-you"
-                ? "font-bold text-text-primary"
-                : "text-muted-text"
+                ? "border-brand bg-brand text-white"
+                : "border-border-custom bg-white text-muted-text hover:bg-[#F8FAFC] hover:text-text-primary"
             )}
           >
             For you
-            {activeTab === "for-you" && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-14 rounded-full bg-brand" />
-            )}
           </button>
           <button
             onClick={() => setActiveTab("following")}
             className={cn(
-              "flex-1 flex items-center justify-center py-3 text-[15px] font-medium transition-colors hover:bg-black/[0.03] relative",
+              "flex h-10 items-center justify-center rounded-lg border text-[15px] font-bold transition-colors",
               activeTab === "following"
-                ? "font-bold text-text-primary"
-                : "text-muted-text"
+                ? "border-brand bg-brand text-white"
+                : "border-border-custom bg-white text-muted-text hover:bg-[#F8FAFC] hover:text-text-primary"
             )}
           >
             Following
-            {activeTab === "following" && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-[72px] rounded-full bg-brand" />
-            )}
           </button>
         </div>
       </div>

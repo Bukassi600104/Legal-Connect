@@ -12,25 +12,25 @@
   --font-heading: var(--font-sans);
   --font-serif: var(--font-sans);
 
-  /* LegalConnect X-style brand colors */
-  --color-brand: #1A8CD8;
-  --color-brand-dark: #1470B3;
-  --color-brand-light: #1A8CD815;
-  --color-navy: #0F1419;
-  --color-navy-dark: #000000;
-  --color-gold: #1A8CD8;
-  --color-gold-light: #1A8CD815;
-  --color-teal: #00BA7C;
+  /* LegalConnect NG product palette */
+  --color-brand: #0F766E;
+  --color-brand-dark: #115E59;
+  --color-brand-light: #ECFDF5;
+  --color-navy: #172033;
+  --color-navy-dark: #0B1220;
+  --color-gold: #B7791F;
+  --color-gold-light: #FFF7E6;
+  --color-teal: #0F766E;
   --color-bg: #FFFFFF;
   --color-card-bg: #FFFFFF;
-  --color-border-custom: #EFF3F4;
-  --color-text-primary: #0F1419;
-  --color-muted-text: #536471;
-  --color-error: #F4212E;
-  --color-success: #00BA7C;
-  --color-warning: #FFD400;
-  --color-purple: #7856FF;
-  --color-red-accent: #F4212E;
+  --color-border-custom: #E2E8F0;
+  --color-text-primary: #172033;
+  --color-muted-text: #667085;
+  --color-error: #D92D20;
+  --color-success: #0F766E;
+  --color-warning: #B7791F;
+  --color-purple: #6D5BD0;
+  --color-red-accent: #D92D20;
 
   /* shadcn theme tokens */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -72,39 +72,39 @@
 }
 
 :root {
-  /* X/Twitter inspired shadcn tokens */
+  /* LegalConnect NG app tokens */
   --background: #FFFFFF;
-  --foreground: #0F1419;
+  --foreground: #172033;
   --card: #FFFFFF;
-  --card-foreground: #0F1419;
+  --card-foreground: #172033;
   --popover: #FFFFFF;
-  --popover-foreground: #0F1419;
-  --primary: #1A8CD8;
+  --popover-foreground: #172033;
+  --primary: #0F766E;
   --primary-foreground: #FFFFFF;
-  --secondary: #F7F9F9;
-  --secondary-foreground: #0F1419;
-  --muted: #F7F9F9;
-  --muted-foreground: #536471;
-  --accent: #1A8CD8;
+  --secondary: #F6F8FB;
+  --secondary-foreground: #172033;
+  --muted: #F6F8FB;
+  --muted-foreground: #667085;
+  --accent: #0F766E;
   --accent-foreground: #FFFFFF;
-  --destructive: #F4212E;
-  --border: #EFF3F4;
-  --input: #EFF3F4;
-  --ring: #1A8CD8;
-  --chart-1: #1A8CD8;
-  --chart-2: #00BA7C;
-  --chart-3: #FFD400;
-  --chart-4: #7856FF;
-  --chart-5: #F4212E;
-  --radius: 1rem;
+  --destructive: #D92D20;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #0F766E;
+  --chart-1: #0F766E;
+  --chart-2: #115E59;
+  --chart-3: #B7791F;
+  --chart-4: #6D5BD0;
+  --chart-5: #D92D20;
+  --radius: 0.5rem;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F1419;
-  --sidebar-primary: #1A8CD8;
+  --sidebar-foreground: #172033;
+  --sidebar-primary: #0F766E;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F7F9F9;
-  --sidebar-accent-foreground: #0F1419;
-  --sidebar-border: #EFF3F4;
-  --sidebar-ring: #1A8CD8;
+  --sidebar-accent: #F6F8FB;
+  --sidebar-accent-foreground: #172033;
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: #0F766E;
 }
 
 @layer base {
@@ -122,36 +122,36 @@
     @apply font-sans;
     scroll-behavior: smooth;
   }
-  /* X-style: headings use the same sans-serif font, just bold */
+  /* Product typography */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-source-sans), 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #0F1419;
+    color: #172033;
     font-weight: 700;
   }
 }
 
-/* X-style thin scrollbar */
+/* App scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CFD9DE;
-  border-radius: 2px;
+  background: #CBD5E1;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #AAB8C2;
+  background: #94A3B8;
 }
 
 /* Input placeholder color */
 input::placeholder,
 textarea::placeholder {
-  color: #536471;
+  color: #667085;
 }
 
-/* X-style hover effects */
+/* Product hover effects */
 @layer utilities {
   .hover-overlay {
     @apply transition-colors duration-200;

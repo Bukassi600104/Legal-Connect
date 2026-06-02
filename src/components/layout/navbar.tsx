@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Settings,
-} from "lucide-react";
+import { Settings } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { LogoMark } from "@/components/shared/logo";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -15,51 +13,53 @@ interface NavbarProps {
 export function Navbar({ onMobileMenuToggle }: NavbarProps) {
   const { user, profile, loading: authLoading } = useAuth();
 
-  // On desktop, X hides the top navbar (sidebar is primary).
-  // On mobile, show the X-style top bar: avatar left, logo center, settings right
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border-custom bg-white/85 backdrop-blur-md lg:hidden">
-      <div className="flex h-[53px] items-center justify-between px-4">
-        {/* Left: User avatar (opens mobile nav) or back arrow */}
+    <header className="sticky top-0 z-40 w-full border-b border-border-custom bg-white/95 shadow-sm backdrop-blur-md lg:hidden">
+      <div className="flex h-14 items-center justify-between px-4">
         <div className="flex items-center">
           {authLoading ? (
-            <div className="size-8" />
+            <div className="size-9" />
           ) : user ? (
             <button
               onClick={onMobileMenuToggle}
-              className="size-8 rounded-full overflow-hidden"
+              className="size-9 overflow-hidden rounded-lg border border-border-custom bg-white"
+              aria-label="Open menu"
             >
               {profile?.avatar_url ? (
                 <OptimizedAvatar
                   src={profile.avatar_url}
                   alt={profile.full_name || "User"}
-                  className="size-8"
-                  sizes="32px"
+                  className="size-9"
+                  sizes="36px"
                 />
               ) : (
-                <div className="size-8 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-xs">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-brand/10 text-xs font-bold text-brand">
                   {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
                 </div>
               )}
             </button>
           ) : (
-            <div className="size-8" />
+            <div className="size-9" />
           )}
         </div>
 
-        {/* Center: Logo */}
-        <Link href="/feed" className="inline-flex items-center justify-center">
-          <LogoMark className="size-8" />
+        <Link href="/feed" className="inline-flex items-center gap-2">
+          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-light text-brand">
+            <LogoMark className="size-6" />
+          </span>
+          <span className="text-[15px] font-black text-text-primary">
+            LegalConnect NG
+          </span>
         </Link>
 
-        {/* Right: Actions */}
         <div className="flex items-center gap-1">
           {authLoading ? (
-            <div className="size-8" />
+            <div className="size-9" />
           ) : user ? (
             <Link
               href="/settings"
-              className="inline-flex items-center justify-center size-8 rounded-full text-text-primary hover:bg-[#E7E9EA]"
+              className="inline-flex size-9 items-center justify-center rounded-lg text-text-primary transition-colors hover:bg-[#F8FAFC]"
+              aria-label="Settings"
             >
               <Settings className="size-5" />
             </Link>
@@ -67,13 +67,13 @@ export function Navbar({ onMobileMenuToggle }: NavbarProps) {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="inline-flex h-8 items-center rounded-full px-4 text-sm font-bold text-brand border border-brand/30 hover:bg-brand/5 transition-colors"
+                className="inline-flex h-9 items-center rounded-lg border border-brand/30 px-3 text-sm font-bold text-brand transition-colors hover:bg-brand-light"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="inline-flex h-8 items-center rounded-full bg-brand px-4 text-sm font-bold text-white hover:bg-brand-dark transition-colors"
+                className="inline-flex h-9 items-center rounded-lg bg-brand px-3 text-sm font-bold text-white transition-colors hover:bg-brand-dark"
               >
                 Sign up
               </Link>

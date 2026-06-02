@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home,
-  Search,
-  MessageCircle,
-  Calendar,
   Bookmark,
-  User,
-  Shield,
-  Settings,
+  Calendar,
+  Home,
   LogOut,
+  MessageCircle,
+  Search,
+  Settings,
+  Shield,
+  User,
 } from "lucide-react";
 import {
   Sheet,
@@ -51,12 +51,14 @@ function MobileNavLink({
       href={link.href}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-5 rounded-full px-3 py-3 text-xl transition-colors hover:bg-[#E7E9EA]",
-        active ? "font-bold text-text-primary" : "font-normal text-text-primary"
+        "flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-[15px] font-semibold transition-colors",
+        active
+          ? "border-brand/15 bg-brand-light text-brand"
+          : "text-text-primary hover:border-border-custom hover:bg-[#F8FAFC]"
       )}
     >
       <link.icon
-        className={cn("size-[26px]", active ? "stroke-[2.5]" : "stroke-[1.5]")}
+        className={cn("size-5 shrink-0", active ? "stroke-[2.4]" : "stroke-[1.8]")}
       />
       {link.label}
     </Link>
@@ -84,11 +86,11 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   };
 
   const mainLinks: NavLinkItem[] = [
-    { label: "Home", href: "/feed", icon: Home },
-    { label: "Explore", href: "/explore", icon: Search },
-    { label: "Messages", href: "/messages", icon: MessageCircle },
-    { label: "Bookmarks", href: "/bookmarks", icon: Bookmark },
-    { label: "Consultations", href: "/consultations", icon: Calendar },
+    { label: "Briefings", href: "/feed", icon: Home },
+    { label: "Marketplace", href: "/explore", icon: Search },
+    { label: "Inbox", href: "/messages", icon: MessageCircle },
+    { label: "Saved", href: "/bookmarks", icon: Bookmark },
+    { label: "Consults", href: "/consultations", icon: Calendar },
   ];
 
   if (profile?.role === "lawyer" && lawyerProfile?.slug) {
@@ -109,43 +111,43 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" showCloseButton={false} className="w-[280px] p-0">
-        <SheetHeader className="p-4 pb-2">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-left">
-              {/* User info — X-style */}
-              {profile ? (
-                <div>
-                  <div className="size-10 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold mb-2">
+      <SheetContent side="left" showCloseButton={false} className="w-[300px] p-0">
+        <SheetHeader className="border-b border-border-custom p-4">
+          <SheetTitle className="text-left">
+            {profile ? (
+              <div className="rounded-lg border border-border-custom bg-[#F8FAFC] p-3">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10 text-sm font-bold text-brand">
                     {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
-                  <p className="text-[15px] font-extrabold text-text-primary leading-tight">
-                    {profile.full_name || "User"}
-                  </p>
-                  <p className="text-[13px] font-normal text-muted-text leading-tight">
-                    @{profile.full_name?.toLowerCase().replace(/\s+/g, "") || "user"}
-                  </p>
-                  {lawyerProfile && (
-                    <div className="mt-2">
-                      <TierBadge tier={lawyerProfile.subscription_tier} size="sm" />
-                    </div>
-                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-[15px] font-black leading-tight text-text-primary">
+                      {profile.full_name || "User"}
+                    </p>
+                    <p className="truncate text-[13px] font-normal leading-tight text-muted-text">
+                      @{profile.full_name?.toLowerCase().replace(/\s+/g, "") || "user"}
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <LogoMark className="size-7" />
-                  <span className="font-bold text-text-primary">LegalConnect</span>
-                </div>
-              )}
-            </SheetTitle>
-          </div>
+                {lawyerProfile && (
+                  <TierBadge tier={lawyerProfile.subscription_tier} size="sm" />
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex size-9 items-center justify-center rounded-lg bg-brand-light text-brand">
+                  <LogoMark className="size-6" />
+                </span>
+                <span className="font-black text-text-primary">
+                  LegalConnect NG
+                </span>
+              </div>
+            )}
+          </SheetTitle>
         </SheetHeader>
 
-        <Separator />
-
         <ScrollArea className="flex-1">
-          {/* Navigation */}
-          <nav className="flex flex-col gap-0.5 p-2">
+          <nav className="flex flex-col gap-1 p-3">
             {mainLinks.map((link) => (
               <MobileNavLink
                 key={link.href}
@@ -166,9 +168,9 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             {user && (
               <button
                 onClick={handleSignOut}
-                className="inline-flex items-center gap-5 rounded-full px-3 py-3 text-xl font-normal text-text-primary transition-colors hover:bg-[#E7E9EA] w-full text-left"
+                className="flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-left text-[15px] font-semibold text-text-primary transition-colors hover:border-border-custom hover:bg-[#F8FAFC]"
               >
-                <LogOut className="size-[26px] stroke-[1.5]" />
+                <LogOut className="size-5 stroke-[1.8]" />
                 Log out
               </button>
             )}

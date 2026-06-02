@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Navbar } from "./navbar";
-import { Sidebar } from "./sidebar";
-import { MobileNav } from "./mobile-nav";
 import { MobileBottomBar } from "./mobile-bottom-bar";
+import { MobileNav } from "./mobile-nav";
+import { Navbar } from "./navbar";
 import { RightSidebar } from "./right-sidebar";
+import { Sidebar } from "./sidebar";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -21,28 +21,20 @@ export function AppShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white lg:flex lg:justify-center">
-      {/* Mobile top navbar (hidden on desktop) */}
+    <div className="min-h-screen overflow-x-hidden bg-[#F6F8FB]">
       <Navbar onMobileMenuToggle={() => setMobileNavOpen(true)} />
-
-      {/* Mobile slide-out drawer */}
       <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
 
-      {/* X-style 3-column layout */}
-      <div className="mx-auto flex w-full max-w-[1265px] justify-center lg:mx-0 lg:justify-start">
-        {/* Left Sidebar — fixed, X-style nav */}
+      <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 lg:grid-cols-[248px_minmax(0,760px)_360px] lg:gap-6 lg:px-6">
         {showSidebar && <Sidebar />}
 
-        {/* Main content — center column with border */}
-        <main className="w-full min-w-0 max-w-[600px] border-r border-border-custom pb-16 lg:flex-1 lg:pb-0">
+        <main className="w-full min-w-0 bg-white pb-16 lg:my-4 lg:rounded-lg lg:border lg:border-border-custom lg:pb-0 lg:shadow-sm">
           {children}
         </main>
 
-        {/* Right Sidebar — trending, who to follow */}
         {showRightSidebar && <RightSidebar />}
       </div>
 
-      {/* Mobile bottom tab bar */}
       <MobileBottomBar />
     </div>
   );

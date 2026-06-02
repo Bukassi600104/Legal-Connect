@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
-import { collection, getDocs, query, limit, orderBy } from "firebase/firestore";
+import { CheckCircle2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Input } from "@/components/ui/input";
 import { VerificationBadge } from "@/components/shared/verification-badge";
@@ -35,13 +35,18 @@ const FALLBACK_TOPICS: TrendingTopic[] = [
   { tag: "taxlaw", count: 523 },
 ];
 
+const TRUST_ITEMS = [
+  "Verified lawyer profiles",
+  "Secure consultation requests",
+  "Admin-reviewed marketplace activity",
+];
+
 export function RightSidebar() {
   const { user } = useAuth();
   const [lawyers, setLawyers] = useState<SuggestedLawyer[]>([]);
   const [trending, setTrending] = useState<TrendingTopic[]>([]);
 
   useEffect(() => {
-    // Fetch trending hashtags
     async function fetchTrending() {
       try {
         const q = query(
@@ -92,7 +97,8 @@ export function RightSidebar() {
             specialization:
               data.specialization_ids?.[0]
                 ?.replace(/-/g, " ")
-                ?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || "General Practice",
+                ?.replace(/\b\w/g, (c: string) => c.toUpperCase()) ||
+              "General Practice",
             verified: data.verification_status === "verified",
             slug: data.slug,
           });
@@ -109,115 +115,140 @@ export function RightSidebar() {
   const displayTopics = trending.length > 0 ? trending : FALLBACK_TOPICS;
 
   return (
-    <aside className="hidden lg:flex lg:w-[350px] lg:flex-col lg:gap-4 lg:py-2 lg:pl-6 lg:pr-6">
-      {/* Search bar */}
-      <div className="sticky top-0 bg-white pt-1 pb-3 z-10">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-text" />
-          <Input
-            type="search"
-            placeholder="Search LegalConnect"
-            className="h-[42px] rounded-full border-0 bg-[#EFF3F4] pl-11 pr-4 text-[15px] placeholder:text-muted-text focus-visible:ring-1 focus-visible:ring-brand focus-visible:bg-white focus-visible:border focus-visible:border-brand"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const val = (e.target as HTMLInputElement).value;
-                if (val) window.location.href = `/explore?q=${encodeURIComponent(val)}`;
-              }
-            }}
-          />
+    <aside className="hidden lg:block lg:py-4">
+      <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] flex-col gap-4 overflow-y-auto pr-1">
+        <div className="rounded-lg border border-border-custom bg-white p-3 shadow-sm">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-text" />
+            <Input
+              type="search"
+              placeholder="Search lawyers, topics, cases"
+              className="h-11 rounded-lg border-border-custom bg-[#F8FAFC] pl-10 pr-3 text-[14px] placeholder:text-muted-text focus-visible:border-brand focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-brand/15"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const val = (e.target as HTMLInputElement).value;
+                  if (val) {
+                    window.location.href = `/explore?q=${encodeURIComponent(val)}`;
+                  }
+                }
+              }}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Trending — dynamic from hashtag_counts */}
-      <div className="rounded-2xl bg-[#F7F9F9] overflow-hidden">
-        <h3 className="px-4 pt-3 pb-2 text-xl font-extrabold text-text-primary">
-          Trending
-        </h3>
-        {displayTopics.map((topic) => (
-          <Link
-            key={topic.tag}
-            href={`/hashtag/${topic.tag}`}
-            className="flex flex-col px-4 py-3 transition-colors hover:bg-black/[0.03]"
-          >
-            <span className="text-[13px] text-muted-text">
-              Trending in Legal
-            </span>
-            <span className="text-[15px] font-bold text-text-primary">
-              #{topic.tag}
-            </span>
-            <span className="text-[13px] text-muted-text">
-              {topic.count.toLocaleString()} posts
-            </span>
-          </Link>
-        ))}
-        <Link
-          href="/explore"
-          className="block px-4 py-3 text-[15px] text-brand hover:bg-black/[0.03] transition-colors"
-        >
-          Show more
-        </Link>
-      </div>
-
-      {/* Who to follow — X style */}
-      {user && lawyers.length > 0 && (
-        <div className="rounded-2xl bg-[#F7F9F9] overflow-hidden">
-          <h3 className="px-4 pt-3 pb-2 text-xl font-extrabold text-text-primary">
-            Who to follow
-          </h3>
-          {lawyers.map((lawyer) => (
-            <Link
-              key={lawyer.id}
-              href={lawyer.handle ? `/profile/${lawyer.handle}` : `/lawyer/${lawyer.slug}`}
-              className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-black/[0.03]"
-            >
-              {lawyer.avatar_url ? (
-                <OptimizedAvatar
-                  src={lawyer.avatar_url}
-                  alt={lawyer.full_name}
-                  className="size-10"
-                />
-              ) : (
-                <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">
-                  {lawyer.full_name.charAt(0)}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-[15px] font-bold text-text-primary truncate">
-                    {lawyer.full_name}
-                  </span>
-                  {lawyer.is_premium && <PremiumBadge size="sm" />}
-                  {lawyer.verified && (
-                    <VerificationBadge status="verified" size="sm" />
-                  )}
-                </div>
-                <span className="text-[13px] text-muted-text truncate block">
-                  {lawyer.handle ? `@${lawyer.handle}` : lawyer.specialization}
+        <section className="rounded-lg border border-border-custom bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-gold" />
+            <h3 className="text-[16px] font-black text-text-primary">
+              Legal radar
+            </h3>
+          </div>
+          <div className="mt-3 divide-y divide-border-custom">
+            {displayTopics.map((topic) => (
+              <Link
+                key={topic.tag}
+                href={`/hashtag/${topic.tag}`}
+                className="block py-3 transition-colors hover:text-brand"
+              >
+                <span className="block text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-text">
+                  Active discussion
                 </span>
-              </div>
-              <span className="shrink-0 inline-flex h-8 items-center rounded-full bg-text-primary px-4 text-sm font-bold text-white hover:bg-text-primary/90">
-                Follow
-              </span>
-            </Link>
-          ))}
+                <span className="block text-[15px] font-bold text-text-primary">
+                  #{topic.tag}
+                </span>
+                <span className="block text-[13px] text-muted-text">
+                  {topic.count.toLocaleString()} briefings
+                </span>
+              </Link>
+            ))}
+          </div>
           <Link
             href="/explore"
-            className="block px-4 py-3 text-[15px] text-brand hover:bg-black/[0.03] transition-colors"
+            className="mt-2 inline-flex h-9 items-center rounded-lg border border-brand/20 px-3 text-[14px] font-bold text-brand transition-colors hover:bg-brand-light"
           >
-            Show more
+            Open marketplace
           </Link>
-        </div>
-      )}
+        </section>
 
-      {/* Footer links — X-style */}
-      <div className="px-4 text-[13px] text-muted-text">
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
-          <Link href="/terms" className="hover:underline">Terms</Link>
-          <Link href="/privacy" className="hover:underline">Privacy</Link>
-          <Link href="/cookies" className="hover:underline">Cookies</Link>
-          <Link href="/help" className="hover:underline">Help</Link>
+        {user && lawyers.length > 0 && (
+          <section className="rounded-lg border border-border-custom bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-brand" />
+              <h3 className="text-[16px] font-black text-text-primary">
+                Verified lawyers
+              </h3>
+            </div>
+            <div className="mt-3 space-y-3">
+              {lawyers.map((lawyer) => (
+                <Link
+                  key={lawyer.id}
+                  href={
+                    lawyer.handle
+                      ? `/profile/${lawyer.handle}`
+                      : `/lawyer/${lawyer.slug}`
+                  }
+                  className="flex items-center gap-3 rounded-lg border border-transparent p-2 transition-colors hover:border-border-custom hover:bg-[#F8FAFC]"
+                >
+                  {lawyer.avatar_url ? (
+                    <OptimizedAvatar
+                      src={lawyer.avatar_url}
+                      alt={lawyer.full_name}
+                      className="size-10"
+                    />
+                  ) : (
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-sm font-bold text-brand">
+                      {lawyer.full_name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <span className="truncate text-[14px] font-bold text-text-primary">
+                        {lawyer.full_name}
+                      </span>
+                      {lawyer.is_premium && <PremiumBadge size="sm" />}
+                      {lawyer.verified && (
+                        <VerificationBadge status="verified" size="sm" />
+                      )}
+                    </div>
+                    <span className="block truncate text-[12px] text-muted-text">
+                      {lawyer.handle ? `@${lawyer.handle}` : lawyer.specialization}
+                    </span>
+                  </div>
+                  <span className="shrink-0 rounded-lg bg-navy px-3 py-1.5 text-xs font-bold text-white">
+                    View
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="rounded-lg border border-gold/20 bg-gold-light p-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4 text-gold" />
+            <h3 className="text-[16px] font-black text-text-primary">
+              Trust checklist
+            </h3>
+          </div>
+          <ul className="mt-3 space-y-2">
+            {TRUST_ITEMS.map((item) => (
+              <li key={item} className="flex items-start gap-2 text-[13px] text-text-primary">
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-gold" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <div className="px-1 pb-4 text-[13px] text-muted-text">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            <Link href="/terms" className="hover:text-brand">Terms</Link>
+            <Link href="/privacy" className="hover:text-brand">Privacy</Link>
+            <Link href="/cookies" className="hover:text-brand">Cookies</Link>
+            <Link href="/help" className="hover:text-brand">Help</Link>
+          </div>
+          <p className="mt-2">&copy; {new Date().getFullYear()} LegalConnect NG</p>
         </div>
-        <p className="mt-2">&copy; {new Date().getFullYear()} LegalConnect NG</p>
       </div>
     </aside>
   );

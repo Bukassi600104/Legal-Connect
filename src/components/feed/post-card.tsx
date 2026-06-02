@@ -4,25 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Bookmark,
   Heart,
   MessageCircle,
+  MoreHorizontal,
   Repeat2,
   Share,
-  Bookmark,
-  MoreHorizontal,
 } from "lucide-react";
-import { VerificationBadge } from "@/components/shared/verification-badge";
-import { PremiumBadge } from "@/components/shared/premium-badge";
+import { formatDistanceToNow } from "date-fns";
 import { CategoryPill } from "@/components/shared/category-pill";
+import { OptimizedAvatar, OptimizedMediaImage } from "@/components/shared/optimized-image";
+import { PremiumBadge } from "@/components/shared/premium-badge";
+import { VerificationBadge } from "@/components/shared/verification-badge";
 import { PollDisplay } from "@/components/feed/poll-display";
 import { useAuth } from "@/components/providers/auth-provider";
-import {
-  OptimizedAvatar,
-  OptimizedMediaImage,
-} from "@/components/shared/optimized-image";
 import { cn } from "@/lib/utils";
-import type { Post, UserProfile, LawyerProfile } from "@/types";
-import { formatDistanceToNow } from "date-fns";
+import type { LawyerProfile, Post, UserProfile } from "@/types";
 
 interface PostCardProps {
   post: Post & {
@@ -40,7 +37,7 @@ function renderContentWithHashtags(content: string) {
         <Link
           key={i}
           href={`/hashtag/${tag}`}
-          className="text-brand hover:underline"
+          className="font-semibold text-brand hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {part}
@@ -67,7 +64,6 @@ export function PostCard({ post }: PostCardProps) {
 
   const timeAgo = formatDistanceToNow(createdAt, { addSuffix: false });
 
-  // Author profile link
   const authorHref = post.author?.handle
     ? `/profile/${post.author.handle}`
     : post.author_profile?.slug
@@ -126,9 +122,8 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <article className="border-b border-border-custom px-4 py-3 transition-colors hover:bg-black/[0.03] cursor-pointer">
+    <article className="mx-4 my-3 rounded-lg border border-border-custom bg-white p-4 shadow-sm transition-colors hover:border-brand/30">
       <div className="flex gap-3">
-        {/* Author avatar */}
         <Link href={authorHref} className="shrink-0">
           {post.author?.avatar_url ? (
             <OptimizedAvatar
@@ -137,67 +132,65 @@ export function PostCard({ post }: PostCardProps) {
               className="size-10"
             />
           ) : (
-            <div className="size-10 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10 text-sm font-bold text-brand">
               {post.author?.full_name?.charAt(0)?.toUpperCase() || "?"}
             </div>
           )}
         </Link>
 
-        <div className="flex-1 min-w-0">
-          {/* Author info row */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 min-w-0">
-              <Link
-                href={authorHref}
-                className="text-[15px] font-bold text-text-primary hover:underline truncate"
-              >
-                {post.author?.full_name || "Unknown"}
-              </Link>
-              {post.author?.is_premium && <PremiumBadge size="sm" />}
-              {post.author_profile && (
-                <VerificationBadge
-                  status={post.author_profile.verification_status}
-                  size="sm"
-                />
-              )}
-              {post.author?.handle && (
-                <span className="text-[15px] text-muted-text shrink-0 hidden sm:inline">
-                  @{post.author.handle}
-                </span>
-              )}
-              <span className="text-[15px] text-muted-text shrink-0">
-                &middot; {timeAgo}
-              </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <Link
+                  href={authorHref}
+                  className="truncate text-[15px] font-black text-text-primary hover:text-brand"
+                >
+                  {post.author?.full_name || "Unknown"}
+                </Link>
+                {post.author?.is_premium && <PremiumBadge size="sm" />}
+                {post.author_profile && (
+                  <VerificationBadge
+                    status={post.author_profile.verification_status}
+                    size="sm"
+                  />
+                )}
+              </div>
+              <div className="mt-0.5 flex items-center gap-2 text-[13px] text-muted-text">
+                {post.author?.handle && (
+                  <span className="truncate">@{post.author.handle}</span>
+                )}
+                <span>{timeAgo}</span>
+              </div>
             </div>
-            <button className="inline-flex items-center justify-center size-8 rounded-full text-muted-text hover:text-brand hover:bg-brand/10 transition-colors -mr-2">
+            <button
+              className="-mr-2 inline-flex size-8 items-center justify-center rounded-lg text-muted-text transition-colors hover:bg-brand-light hover:text-brand"
+              aria-label="More actions"
+            >
               <MoreHorizontal className="size-[18px]" />
             </button>
           </div>
 
-          {/* Thread indicator */}
           {post.is_thread_starter && (
             <Link
               href={`/feed/${post.id}`}
-              className="text-[13px] text-brand hover:underline"
+              className="mt-2 inline-flex text-[13px] font-semibold text-brand hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
-              Show this thread
+              Open related brief
             </Link>
           )}
 
-          {/* Category pill */}
           {post.category && post.category !== "general" && (
-            <div className="mt-0.5">
+            <div className="mt-2">
               <CategoryPill category={post.category} size="sm" />
             </div>
           )}
 
-          {/* Content with clickable hashtags */}
           <div
             role="link"
             tabIndex={0}
             onClick={(e) => {
-              // Don't navigate if a link inside was clicked
               if ((e.target as HTMLElement).closest("a")) return;
               router.push(`/feed/${post.id}`);
             }}
@@ -206,16 +199,15 @@ export function PostCard({ post }: PostCardProps) {
                 router.push(`/feed/${post.id}`);
               }
             }}
-            className="cursor-pointer"
+            className="mt-3 cursor-pointer border-l-2 border-brand/20 pl-3"
           >
-            <p className="mt-0.5 text-[15px] leading-[20px] text-text-primary whitespace-pre-wrap">
+            <p className="whitespace-pre-wrap text-[15px] leading-6 text-text-primary">
               {renderContentWithHashtags(post.content)}
             </p>
           </div>
 
-          {/* Media */}
           {post.media_urls && post.media_urls.length > 0 && (
-            <div className="mt-3 overflow-hidden rounded-2xl border border-border-custom">
+            <div className="mt-3 overflow-hidden rounded-lg border border-border-custom">
               <OptimizedMediaImage
                 src={post.media_urls[0]}
                 alt="Post media"
@@ -224,85 +216,61 @@ export function PostCard({ post }: PostCardProps) {
             </div>
           )}
 
-          {/* Poll */}
           {post.poll && <PollDisplay postId={post.id} poll={post.poll} />}
 
-          {/* Engagement row — X-style */}
-          <div className="mt-3 flex items-center justify-between max-w-[425px] -ml-2">
-            {/* Reply */}
+          <div className="mt-4 grid grid-cols-5 gap-2 border-t border-border-custom pt-3 text-muted-text">
             <Link
               href={`/feed/${post.id}`}
-              className="group inline-flex items-center gap-1"
+              className="inline-flex h-9 items-center justify-center gap-1 rounded-lg transition-colors hover:bg-brand-light hover:text-brand"
             >
-              <span className="inline-flex items-center justify-center size-[34px] rounded-full group-hover:bg-brand/10 transition-colors">
-                <MessageCircle className="size-[18px] text-muted-text group-hover:text-brand" />
-              </span>
-              <span className="text-[13px] text-muted-text group-hover:text-brand">
+              <MessageCircle className="size-[17px]" />
+              <span className="text-[13px]">
                 {post.comment_count > 0 ? post.comment_count : ""}
               </span>
             </Link>
 
-            {/* Repost/Share */}
-            <button className="group inline-flex items-center gap-1">
-              <span className="inline-flex items-center justify-center size-[34px] rounded-full group-hover:bg-success/10 transition-colors">
-                <Repeat2 className="size-[18px] text-muted-text group-hover:text-success" />
-              </span>
-              <span className="text-[13px] text-muted-text group-hover:text-success">
+            <button className="inline-flex h-9 items-center justify-center gap-1 rounded-lg transition-colors hover:bg-success/10 hover:text-success">
+              <Repeat2 className="size-[17px]" />
+              <span className="text-[13px]">
                 {post.share_count > 0 ? post.share_count : ""}
               </span>
             </button>
 
-            {/* Like */}
             <button
               onClick={handleLike}
-              className="group inline-flex items-center gap-1"
+              className={cn(
+                "inline-flex h-9 items-center justify-center gap-1 rounded-lg transition-colors hover:bg-red-accent/10 hover:text-red-accent",
+                liked && "text-red-accent"
+              )}
             >
-              <span className={cn(
-                "inline-flex items-center justify-center size-[34px] rounded-full transition-colors",
-                liked ? "text-[#F91880]" : "group-hover:bg-[#F91880]/10"
-              )}>
-                <Heart
-                  className={cn(
-                    "size-[18px]",
-                    liked
-                      ? "fill-[#F91880] text-[#F91880]"
-                      : "text-muted-text group-hover:text-[#F91880]"
-                  )}
-                />
-              </span>
-              <span className={cn(
-                "text-[13px]",
-                liked ? "text-[#F91880]" : "text-muted-text group-hover:text-[#F91880]"
-              )}>
+              <Heart
+                className={cn(
+                  "size-[17px]",
+                  liked && "fill-red-accent text-red-accent"
+                )}
+              />
+              <span className="text-[13px]">
                 {likeCount > 0 ? likeCount : ""}
               </span>
             </button>
 
-            {/* Bookmark */}
             <button
               onClick={handleBookmark}
-              className="group inline-flex items-center gap-1"
+              className={cn(
+                "inline-flex h-9 items-center justify-center rounded-lg transition-colors hover:bg-gold-light hover:text-gold",
+                bookmarked && "text-gold"
+              )}
             >
-              <span className={cn(
-                "inline-flex items-center justify-center size-[34px] rounded-full transition-colors",
-                bookmarked ? "text-brand" : "group-hover:bg-brand/10"
-              )}>
-                <Bookmark
-                  className={cn(
-                    "size-[18px]",
-                    bookmarked
-                      ? "fill-brand text-brand"
-                      : "text-muted-text group-hover:text-brand"
-                  )}
-                />
-              </span>
+              <Bookmark
+                className={cn(
+                  "size-[17px]",
+                  bookmarked && "fill-gold text-gold"
+                )}
+              />
             </button>
 
-            {/* Share */}
-            <button className="group inline-flex items-center">
-              <span className="inline-flex items-center justify-center size-[34px] rounded-full group-hover:bg-brand/10 transition-colors">
-                <Share className="size-[18px] text-muted-text group-hover:text-brand" />
-              </span>
+            <button className="inline-flex h-9 items-center justify-center rounded-lg transition-colors hover:bg-brand-light hover:text-brand">
+              <Share className="size-[17px]" />
             </button>
           </div>
         </div>

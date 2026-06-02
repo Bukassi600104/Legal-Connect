@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ImagePlus, Loader2, Globe } from "lucide-react";
+import { Globe, ImagePlus, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -62,9 +62,8 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
   };
 
   return (
-    <div className="border-b border-border-custom px-4 pt-3 pb-2">
+    <div className="m-4 rounded-lg border border-border-custom bg-white p-4 shadow-sm">
       <div className="flex gap-3">
-        {/* Avatar */}
         {profile.avatar_url ? (
           <OptimizedAvatar
             src={profile.avatar_url}
@@ -72,43 +71,40 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
             className="size-10"
           />
         ) : (
-          <div className="size-10 shrink-0 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-sm">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-sm font-bold text-brand">
             {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
           </div>
         )}
 
-        <div className="flex-1 min-w-0">
-          {/* Text input — X-style borderless */}
+        <div className="min-w-0 flex-1">
           <textarea
-            placeholder="What's happening in law?"
+            placeholder="Share a legal insight or update"
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
               if (!expanded && e.target.value) setExpanded(true);
             }}
             onFocus={() => setExpanded(true)}
-            className="w-full min-h-[52px] resize-none border-0 bg-transparent p-0 text-xl placeholder:text-muted-text placeholder:text-xl focus:outline-none focus:ring-0"
+            className="min-h-[84px] w-full resize-none rounded-lg border border-border-custom bg-[#F8FAFC] px-3 py-2 text-[16px] leading-6 text-text-primary placeholder:text-muted-text focus:border-brand focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/15"
             rows={expanded ? 3 : 1}
           />
 
           {expanded && (
             <>
-              {/* Audience selector — X-style */}
-              <button className="inline-flex items-center gap-1 rounded-full border border-brand/30 px-3 py-0.5 text-[13px] font-bold text-brand mt-2 hover:bg-brand/5 transition-colors">
+              <button className="mt-3 inline-flex items-center gap-1 rounded-lg border border-brand/20 px-3 py-1 text-[13px] font-bold text-brand transition-colors hover:bg-brand-light">
                 <Globe className="size-3.5" />
-                Everyone can reply
+                Public briefing
               </button>
 
-              <div className="mt-3 border-t border-border-custom pt-3 flex items-center justify-between">
+              <div className="mt-3 flex items-center justify-between border-t border-border-custom pt-3">
                 <div className="flex items-center gap-1">
-                  {/* Category picker */}
                   <Select
                     value={category}
                     onValueChange={(v) =>
                       setCategory((v ?? "") as PostCategory | "")
                     }
                   >
-                    <SelectTrigger className="h-8 w-auto gap-1 text-xs border-0 px-2 text-brand hover:bg-brand/10 rounded-full">
+                    <SelectTrigger className="h-9 w-auto gap-1 rounded-lg border-border-custom px-3 text-xs font-bold text-brand hover:bg-brand-light">
                       <SelectValue placeholder="Topic" />
                     </SelectTrigger>
                     <SelectContent>
@@ -122,10 +118,10 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
                     </SelectContent>
                   </Select>
 
-                  {/* Image upload */}
                   <button
-                    className="inline-flex items-center justify-center size-9 rounded-full text-brand hover:bg-brand/10 transition-colors"
+                    className="inline-flex size-9 items-center justify-center rounded-lg text-brand transition-colors hover:bg-brand-light"
                     type="button"
+                    aria-label="Add image"
                   >
                     <ImagePlus className="size-5" />
                   </button>
@@ -135,7 +131,9 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
                   {content.length > 0 && (
                     <span
                       className={`text-[13px] ${
-                        content.length > charLimit ? "text-[#F4212E]" : "text-muted-text"
+                        content.length > charLimit
+                          ? "text-error"
+                          : "text-muted-text"
                       }`}
                     >
                       {content.length}/{charLimit}
@@ -143,13 +141,15 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
                   )}
                   <button
                     onClick={handlePost}
-                    disabled={!content.trim() || content.length > charLimit || posting}
-                    className="inline-flex h-9 items-center rounded-full bg-brand px-5 text-[15px] font-bold text-white hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    disabled={
+                      !content.trim() || content.length > charLimit || posting
+                    }
+                    className="inline-flex h-9 items-center rounded-lg bg-brand px-5 text-[15px] font-bold text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {posting ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      "Post"
+                      "Publish"
                     )}
                   </button>
                 </div>
