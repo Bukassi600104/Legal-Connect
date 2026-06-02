@@ -21,7 +21,7 @@ import {
   GOOGLE_REDIRECT_KEY,
   GOOGLE_ROLE_KEY,
   completeGoogleCredential,
-} from "@/hooks/use-auth-actions";
+} from "@/lib/firebase/google-auth";
 import type { UserProfile, LawyerProfile } from "@/types";
 
 interface AuthContextType {

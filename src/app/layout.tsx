@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
+import { AppProviders } from "@/components/providers/app-providers";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -65,9 +66,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
+        <AppProviders>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </AppProviders>
         <Toaster position="top-right" richColors />
       </body>
     </html>
