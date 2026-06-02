@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
@@ -13,8 +13,6 @@ export default function ClientSignupPage() {
   const {
     signUp,
     signInWithGoogle,
-    completeGoogleRedirect,
-    getStoredGoogleRedirectTo,
     loading,
     error,
     clearError,
@@ -29,31 +27,6 @@ export default function ClientSignupPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const redirectHandled = useRef(false);
-
-  useEffect(() => {
-    let active = true;
-
-    async function finishRedirectSignup() {
-      if (redirectHandled.current) return;
-      redirectHandled.current = true;
-
-      try {
-        const user = await completeGoogleRedirect("client");
-        if (!user || !active) return;
-
-        router.replace(getStoredGoogleRedirectTo() || "/feed");
-      } catch {
-        // Error handled by hook
-      }
-    }
-
-    void finishRedirectSignup();
-
-    return () => {
-      active = false;
-    };
-  }, [completeGoogleRedirect, getStoredGoogleRedirectTo, router]);
 
   const updateField = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

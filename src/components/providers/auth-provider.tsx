@@ -9,6 +9,7 @@ import {
   useRef,
 } from "react";
 import {
+  getRedirectResult,
   onAuthStateChanged,
   signOut as firebaseSignOut,
   signInWithCustomToken,
@@ -16,6 +17,11 @@ import {
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
+import {
+  GOOGLE_REDIRECT_KEY,
+  GOOGLE_ROLE_KEY,
+  completeGoogleCredential,
+} from "@/hooks/use-auth-actions";
 import type { UserProfile, LawyerProfile } from "@/types";
 
 interface AuthContextType {
@@ -44,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
   const [loading, setLoading] = useState(true);
   const sessionRecoveryAttempted = useRef(false);
+  const googleRedirectAttempted = useRef(false);
 
   const fetchProfile = useCallback(async (uid: string) => {
     try {
@@ -103,6 +110,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function completePendingGoogleRedirect() {
+      if (googleRedirectAttempted.current) return;
+      googleRedirectAttempted.current = true;
+
+      try {
+        const credential = await getRedirectResult(auth);
+        if (!credential) return;
+
+        const storedRole = window.localStorage.getItem(GOOGLE_ROLE_KEY);
+        const redirectTo = window.localStorage.getItem(GOOGLE_REDIRECT_KEY);
+        const role = storedRole === "lawyer" ? "lawyer" : "client";
+
+        const googleUser = await completeGoogleCredential(credential, role);
+        if (cancelled) return;
+
+        window.localStorage.removeItem(GOOGLE_ROLE_KEY);
+        window.localStorage.removeItem(GOOGLE_REDIRECT_KEY);
+
+        setUser(googleUser);
+        await fetchProfile(googleUser.uid);
+        setLoading(false);
+
+        if (
+          redirectTo &&
+          window.location.pathname + window.location.search !== redirectTo
+        ) {
+          window.location.replace(redirectTo);
+        }
+      } catch (error) {
+        console.error("Google redirect completion failed:", error);
+        setLoading(false);
+      }
+    }
+
+    void completePendingGoogleRedirect();
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -122,7 +167,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [fetchProfile, recoverFromSession]);
 
   const signOut = async () => {
