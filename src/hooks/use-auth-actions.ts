@@ -14,6 +14,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
 import { claimHandle, generateUniqueHandle } from "@/lib/handle-utils";
 import {
+  GOOGLE_PENDING_KEY,
   GOOGLE_REDIRECT_KEY,
   GOOGLE_ROLE_KEY,
   completeGoogleCredential,
@@ -170,6 +171,7 @@ export function useAuthActions() {
     setError(null);
     try {
       if (typeof window !== "undefined") {
+        window.localStorage.setItem(GOOGLE_PENDING_KEY, String(Date.now()));
         window.localStorage.setItem(GOOGLE_ROLE_KEY, role);
         window.localStorage.setItem(
           GOOGLE_REDIRECT_KEY,
@@ -218,6 +220,7 @@ export function useAuthActions() {
       const user = await completeGoogleCredential(credential, role);
 
       if (typeof window !== "undefined") {
+        window.localStorage.removeItem(GOOGLE_PENDING_KEY);
         window.localStorage.removeItem(GOOGLE_ROLE_KEY);
       }
 

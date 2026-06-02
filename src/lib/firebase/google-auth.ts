@@ -13,11 +13,12 @@ import type { AccountType, UserRole } from "@/types";
 
 export const GOOGLE_ROLE_KEY = "legalconnect.googleRole";
 export const GOOGLE_REDIRECT_KEY = "legalconnect.googleRedirectTo";
+export const GOOGLE_PENDING_KEY = "legalconnect.googlePending";
 
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
-async function ensureGoogleUserProfile(user: User, role: UserRole) {
+export async function ensureGoogleUserProfile(user: User, role: UserRole) {
   const userDoc = await getDoc(doc(db, "users", user.uid));
 
   if (userDoc.exists()) return;
@@ -46,7 +47,7 @@ async function ensureGoogleUserProfile(user: User, role: UserRole) {
   });
 }
 
-async function createSession(user: User) {
+export async function createSessionForUser(user: User) {
   const idToken = await user.getIdToken();
   const response = await fetch("/api/auth/session", {
     method: "POST",
@@ -65,6 +66,6 @@ export async function completeGoogleCredential(
 ) {
   const user = credential.user;
   await ensureGoogleUserProfile(user, role);
-  await createSession(user);
+  await createSessionForUser(user);
   return user;
 }

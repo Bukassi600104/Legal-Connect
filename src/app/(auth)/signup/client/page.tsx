@@ -10,13 +10,7 @@ import { useAuthActions } from "@/hooks/use-auth-actions";
 
 export default function ClientSignupPage() {
   const router = useRouter();
-  const {
-    signUp,
-    signInWithGoogle,
-    loading,
-    error,
-    clearError,
-  } = useAuthActions();
+  const { signUp, loading, error, clearError } = useAuthActions();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -63,12 +57,12 @@ export default function ClientSignupPage() {
   };
 
   const handleGoogleSignUp = async () => {
-    try {
-      const user = await signInWithGoogle("client", "/feed");
-      if (user) router.push("/feed");
-    } catch {
-      // Error handled by hook
-    }
+    const params = new URLSearchParams({
+      provider: "google",
+      role: "client",
+      redirectTo: "/feed",
+    });
+    router.push(`/auth/callback?${params.toString()}`);
   };
 
   const displayError = validationError || error;

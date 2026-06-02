@@ -18,9 +18,12 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
 import {
+  GOOGLE_PENDING_KEY,
   GOOGLE_REDIRECT_KEY,
   GOOGLE_ROLE_KEY,
   completeGoogleCredential,
+  createSessionForUser,
+  ensureGoogleUserProfile,
 } from "@/lib/firebase/google-auth";
 import type { UserProfile, LawyerProfile } from "@/types";
 
@@ -112,6 +115,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    const getStoredGoogleRole = () => {
+      const storedRole = window.localStorage.getItem(GOOGLE_ROLE_KEY);
+      return storedRole === "lawyer" ? "lawyer" : "client";
+    };
+
+    const clearGoogleRedirectState = () => {
+      window.localStorage.removeItem(GOOGLE_ROLE_KEY);
+      window.localStorage.removeItem(GOOGLE_REDIRECT_KEY);
+      window.localStorage.removeItem(GOOGLE_PENDING_KEY);
+    };
+
+    const finishCurrentUserSession = async (currentUser: User) => {
+      const isGoogleUser = currentUser.providerData.some(
+        (provider) => provider.providerId === "google.com"
+      );
+
+      if (isGoogleUser) {
+        await ensureGoogleUserProfile(currentUser, getStoredGoogleRole());
+      }
+
+      await createSessionForUser(currentUser);
+    };
+
     async function completePendingGoogleRedirect() {
       if (googleRedirectAttempted.current) return;
       googleRedirectAttempted.current = true;
@@ -120,15 +146,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const credential = await getRedirectResult(auth);
         if (!credential) return;
 
-        const storedRole = window.localStorage.getItem(GOOGLE_ROLE_KEY);
         const redirectTo = window.localStorage.getItem(GOOGLE_REDIRECT_KEY);
-        const role = storedRole === "lawyer" ? "lawyer" : "client";
 
-        const googleUser = await completeGoogleCredential(credential, role);
+        const googleUser = await completeGoogleCredential(
+          credential,
+          getStoredGoogleRole()
+        );
         if (cancelled) return;
 
-        window.localStorage.removeItem(GOOGLE_ROLE_KEY);
-        window.localStorage.removeItem(GOOGLE_REDIRECT_KEY);
+        clearGoogleRedirectState();
 
         setUser(googleUser);
         await fetchProfile(googleUser.uid);
@@ -142,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Google redirect completion failed:", error);
+        window.localStorage.removeItem(GOOGLE_PENDING_KEY);
         setLoading(false);
       }
     }
@@ -150,6 +177,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
+        await finishCurrentUserSession(currentUser);
+        clearGoogleRedirectState();
         setUser(currentUser);
         await fetchProfile(currentUser.uid);
         setLoading(false);

@@ -21,13 +21,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/feed";
 
-  const {
-    signIn,
-    signInWithGoogle,
-    loading,
-    error,
-    clearError,
-  } = useAuthActions();
+  const { signIn, loading, error, clearError } = useAuthActions();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,12 +38,12 @@ function LoginForm() {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      const user = await signInWithGoogle("client", redirectTo);
-      if (user) router.push(redirectTo);
-    } catch {
-      // Error is handled by the hook
-    }
+    const params = new URLSearchParams({
+      provider: "google",
+      role: "client",
+      redirectTo,
+    });
+    router.push(`/auth/callback?${params.toString()}`);
   };
 
   return (
