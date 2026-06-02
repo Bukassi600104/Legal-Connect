@@ -3,19 +3,27 @@
 import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
+  getRedirectResult,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   sendPasswordResetEmail,
   updateProfile,
+  type User,
+  type UserCredential,
 } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
 import { generateUniqueHandle, claimHandle } from "@/lib/handle-utils";
 import { getDefaultAvatarUrl, getDefaultBannerUrl } from "@/lib/avatar-utils";
 import type { UserRole, AccountType } from "@/types";
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+
+const GOOGLE_ROLE_KEY = "legalconnect.googleRole";
+const GOOGLE_REDIRECT_KEY = "legalconnect.googleRedirectTo";
 
 interface SignUpData {
   email: string;
@@ -157,49 +165,116 @@ export function useAuthActions() {
     }
   };
 
-  const signInWithGoogle = async (role: UserRole = "client") => {
+  const ensureGoogleUserProfile = async (user: User, role: UserRole) => {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+
+    if (userDoc.exists()) return;
+
+    const displayName = user.displayName || user.email?.split("@")[0] || "User";
+    const handle = await generateUniqueHandle(displayName);
+    await claimHandle(handle, user.uid);
+
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      full_name: displayName,
+      handle,
+      phone: user.phoneNumber || null,
+      role,
+      account_type: "individual" as AccountType,
+      avatar_url: user.photoURL || getDefaultAvatarUrl(displayName),
+      banner_url: getDefaultBannerUrl(displayName),
+      bio: null,
+      is_active: true,
+      is_premium: false,
+      follower_count: 0,
+      following_count: 0,
+      post_count: 0,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+  };
+
+  const createSession = async (user: User) => {
+    const idToken = await user.getIdToken();
+    const response = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create session");
+    }
+  };
+
+  const completeGoogleCredential = async (
+    credential: UserCredential,
+    role: UserRole
+  ) => {
+    const user = credential.user;
+    await ensureGoogleUserProfile(user, role);
+    await createSession(user);
+    return user;
+  };
+
+  const signInWithGoogle = async (
+    role: UserRole = "client",
+    redirectTo?: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(GOOGLE_ROLE_KEY, role);
+        window.localStorage.setItem(
+          GOOGLE_REDIRECT_KEY,
+          redirectTo || window.location.pathname + window.location.search
+        );
+      }
+
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    } catch (err: unknown) {
+      const message = getFirebaseErrorMessage(err);
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithGooglePopup = async (role: UserRole = "client") => {
     setLoading(true);
     setError(null);
     try {
       const credential = await signInWithPopup(auth, googleProvider);
-      const user = credential.user;
+      return await completeGoogleCredential(credential, role);
+    } catch (err: unknown) {
+      const message = getFirebaseErrorMessage(err);
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Check if user profile exists; if not, create one
-      const { getDoc } = await import("firebase/firestore");
-      const userDoc = await getDoc(doc(db, "users", user.uid));
+  const completeGoogleRedirect = async (fallbackRole: UserRole = "client") => {
+    setLoading(true);
+    setError(null);
+    try {
+      const credential = await getRedirectResult(auth);
+      if (!credential) return null;
 
-      if (!userDoc.exists()) {
-        const displayName = user.displayName || "User";
-        const handle = await generateUniqueHandle(displayName);
-        await claimHandle(handle, user.uid);
+      const storedRole =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(GOOGLE_ROLE_KEY)
+          : null;
+      const role = storedRole === "lawyer" ? "lawyer" : fallbackRole;
+      const user = await completeGoogleCredential(credential, role);
 
-        await setDoc(doc(db, "users", user.uid), {
-          email: user.email,
-          full_name: displayName,
-          handle,
-          phone: user.phoneNumber || null,
-          role,
-          account_type: "individual" as AccountType,
-          avatar_url: user.photoURL || getDefaultAvatarUrl(displayName),
-          banner_url: getDefaultBannerUrl(displayName),
-          bio: null,
-          is_active: true,
-          is_premium: false,
-          follower_count: 0,
-          following_count: 0,
-          post_count: 0,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        });
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(GOOGLE_ROLE_KEY);
       }
-
-      // Set session cookie
-      const idToken = await user.getIdToken();
-      await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
 
       return user;
     } catch (err: unknown) {
@@ -209,6 +284,13 @@ export function useAuthActions() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getStoredGoogleRedirectTo = () => {
+    if (typeof window === "undefined") return null;
+    const redirectTo = window.localStorage.getItem(GOOGLE_REDIRECT_KEY);
+    window.localStorage.removeItem(GOOGLE_REDIRECT_KEY);
+    return redirectTo;
   };
 
   const resetPassword = async (email: string) => {
@@ -229,6 +311,9 @@ export function useAuthActions() {
     signUp,
     signIn,
     signInWithGoogle,
+    signInWithGooglePopup,
+    completeGoogleRedirect,
+    getStoredGoogleRedirectTo,
     resetPassword,
     loading,
     error,

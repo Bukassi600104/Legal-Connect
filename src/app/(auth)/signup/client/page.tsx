@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
@@ -10,8 +10,15 @@ import { useAuthActions } from "@/hooks/use-auth-actions";
 
 export default function ClientSignupPage() {
   const router = useRouter();
-  const { signUp, signInWithGoogle, loading, error, clearError } =
-    useAuthActions();
+  const {
+    signUp,
+    signInWithGoogle,
+    completeGoogleRedirect,
+    getStoredGoogleRedirectTo,
+    loading,
+    error,
+    clearError,
+  } = useAuthActions();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -22,6 +29,31 @@ export default function ClientSignupPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const redirectHandled = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function finishRedirectSignup() {
+      if (redirectHandled.current) return;
+      redirectHandled.current = true;
+
+      try {
+        const user = await completeGoogleRedirect("client");
+        if (!user || !active) return;
+
+        router.replace(getStoredGoogleRedirectTo() || "/feed");
+      } catch {
+        // Error handled by hook
+      }
+    }
+
+    void finishRedirectSignup();
+
+    return () => {
+      active = false;
+    };
+  }, [completeGoogleRedirect, getStoredGoogleRedirectTo, router]);
 
   const updateField = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -59,8 +91,8 @@ export default function ClientSignupPage() {
 
   const handleGoogleSignUp = async () => {
     try {
-      await signInWithGoogle("client");
-      router.push("/feed");
+      const user = await signInWithGoogle("client", "/feed");
+      if (user) router.push("/feed");
     } catch {
       // Error handled by hook
     }

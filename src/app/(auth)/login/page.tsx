@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -21,12 +21,49 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/feed";
 
-  const { signIn, signInWithGoogle, loading, error, clearError } =
-    useAuthActions();
+  const {
+    signIn,
+    signInWithGoogle,
+    completeGoogleRedirect,
+    getStoredGoogleRedirectTo,
+    loading,
+    error,
+    clearError,
+  } = useAuthActions();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const redirectHandled = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function finishRedirectLogin() {
+      if (redirectHandled.current) return;
+      redirectHandled.current = true;
+
+      try {
+        const user = await completeGoogleRedirect("client");
+        if (!user || !active) return;
+
+        router.replace(getStoredGoogleRedirectTo() || redirectTo);
+      } catch {
+        // Error is handled by the hook
+      }
+    }
+
+    void finishRedirectLogin();
+
+    return () => {
+      active = false;
+    };
+  }, [
+    completeGoogleRedirect,
+    getStoredGoogleRedirectTo,
+    redirectTo,
+    router,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +77,8 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle("client");
-      router.push(redirectTo);
+      const user = await signInWithGoogle("client", redirectTo);
+      if (user) router.push(redirectTo);
     } catch {
       // Error is handled by the hook
     }
