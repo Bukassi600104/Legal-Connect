@@ -250,6 +250,8 @@ export interface CaseDiscussionMessage {
   id: string;
   sender_id: string;
   sender_name: string;
+  sender_scn?: string | null;
+  sender_role_label?: string;
   content: string;
   message_type: MessageType;
   created_at: Timestamp | string;

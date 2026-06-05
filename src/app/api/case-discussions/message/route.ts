@@ -63,6 +63,9 @@ export async function POST(request: NextRequest) {
     batch.set(discussionRef.collection("messages").doc(), {
       sender_id: access.uid,
       sender_name: access.user.full_name || "Lawyer",
+      sender_scn: access.lawyerProfile.scn || null,
+      sender_role_label:
+        discussion.creator_id === access.uid ? "Lead Counsel" : "Contributor",
       content,
       message_type: "text",
       created_at: now,

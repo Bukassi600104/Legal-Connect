@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       urgency,
       creator_id: access.uid,
       creator_name: access.user.full_name || "Lawyer",
+      creator_scn: access.lawyerProfile.scn || null,
       creator_slug: access.lawyerProfile.slug || null,
       member_ids: memberIds,
       participant_count: 1,
@@ -88,6 +89,8 @@ export async function POST(request: NextRequest) {
     batch.set(discussionRef.collection("messages").doc(), {
       sender_id: access.uid,
       sender_name: access.user.full_name || "Lawyer",
+      sender_scn: access.lawyerProfile.scn || null,
+      sender_role_label: "Lead Counsel",
       content: summary,
       message_type: "system",
       created_at: now,

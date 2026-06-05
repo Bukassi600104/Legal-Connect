@@ -198,7 +198,7 @@ export default function CaseCircleDetailPage() {
                 {discussion.summary}
               </p>
               <p className="mt-3 text-[13px] text-muted-text">
-                Started by {discussion.creator_name}
+                Lead Counsel: {discussion.creator_name}
               </p>
 
               {!isSubscribed && (
@@ -248,9 +248,17 @@ export default function CaseCircleDetailPage() {
                 className="rounded-lg border border-border-custom bg-white p-3 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[14px] font-bold text-text-primary">
-                    {message.sender_name}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] font-bold text-text-primary">
+                      {message.sender_name}
+                    </p>
+                    <p className="text-[12px] font-bold text-brand">
+                      {message.sender_role_label ||
+                        (message.sender_id === discussion.creator_id
+                          ? "Lead Counsel"
+                          : "Contributor")}
+                    </p>
+                  </div>
                   <p className="text-[12px] text-muted-text">
                     {toDisplayDate(message.created_at)}
                   </p>
@@ -258,6 +266,15 @@ export default function CaseCircleDetailPage() {
                 <p className="mt-2 whitespace-pre-wrap text-[15px] leading-6 text-text-primary">
                   {message.content}
                 </p>
+                <div className="mt-3 border-t border-border-custom pt-2 text-[12px] text-muted-text">
+                  <span className="font-semibold text-text-primary">
+                    {message.sender_name}
+                  </span>
+                  <span> · </span>
+                  <span>
+                    SCN {message.sender_scn || "not displayed"}
+                  </span>
+                </div>
               </article>
             ))}
           </div>
