@@ -20,6 +20,7 @@ export type VerificationRequestStatus = "pending" | "approved" | "rejected";
 export type SubscriptionStatus = "active" | "cancelled" | "expired" | "past_due";
 export type BillingCycle = "monthly" | "yearly";
 export type CorporateRole = "admin" | "member";
+export type CaseDiscussionStatus = "open" | "closed";
 
 export type NotificationType =
   | "new_message"
@@ -31,7 +32,8 @@ export type NotificationType =
   | "consultation_reminder"
   | "verification_update"
   | "subscription_renewal"
-  | "subscription_expired";
+  | "subscription_expired"
+  | "case_discussion_invite";
 
 // ============ CORE MODELS ============
 
@@ -222,6 +224,35 @@ export interface Message {
   created_at: Timestamp | string;
   // Populated on read
   sender?: UserProfile;
+}
+
+// ============ LAWYER CASE CIRCLES ============
+
+export interface CaseDiscussion {
+  id: string;
+  title: string;
+  summary: string;
+  practice_area?: string | null;
+  urgency: string;
+  creator_id: string;
+  creator_name: string;
+  creator_slug?: string | null;
+  member_ids: string[];
+  participant_count: number;
+  status: CaseDiscussionStatus;
+  last_message_preview?: string;
+  last_message_at?: Timestamp | string;
+  created_at: Timestamp | string;
+  updated_at: Timestamp | string;
+}
+
+export interface CaseDiscussionMessage {
+  id: string;
+  sender_id: string;
+  sender_name: string;
+  content: string;
+  message_type: MessageType;
+  created_at: Timestamp | string;
 }
 
 // ============ CONSULTATIONS ============

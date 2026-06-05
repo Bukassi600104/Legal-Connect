@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   BadgeCheck,
   LinkIcon,
+  Lock,
 } from "lucide-react";
 import { query, where, getDocs, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
@@ -28,6 +29,7 @@ import {
 } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useFollow } from "@/hooks/use-follow";
+import { isPaidSubscriptionTier } from "@/lib/feature-gate";
 import { cn } from "@/lib/utils";
 import type { LawyerProfile, UserProfile, Post, Review } from "@/types";
 
@@ -156,6 +158,7 @@ export default function LawyerProfilePage() {
   const feeMin = formatNairaValue(lawyer.fee_range_min);
   const feeMax = formatNairaValue(lawyer.fee_range_max);
   const feeRange = feeMin ? `${feeMin}${feeMax ? ` - ${feeMax}` : "+"}` : null;
+  const isSubscribedLawyer = isPaidSubscriptionTier(lawyer.subscription_tier);
   const verificationLabel =
     lawyer.verification_status === "verified"
       ? "Verified credentials"
@@ -178,7 +181,7 @@ export default function LawyerProfilePage() {
             <h1 className="text-[17px] font-extrabold text-text-primary leading-tight">
               {userProfile.full_name}
             </h1>
-            {userProfile.is_premium && <PremiumBadge size="sm" />}
+            {isSubscribedLawyer && <PremiumBadge size="sm" />}
           </div>
           <p className="text-[13px] text-muted-text">
             {posts.length} post{posts.length !== 1 ? "s" : ""}
@@ -232,18 +235,29 @@ export default function LawyerProfilePage() {
               </Link>
             ) : (
               <>
-                <Link
-                  href={`/messages?to=${lawyer.user_id}`}
-                  className="size-9 rounded-full border border-border-custom flex items-center justify-center hover:bg-[#E7E9EA] transition-colors"
-                >
-                  <MessageCircle className="size-5 text-text-primary" />
-                </Link>
-                <Link
-                  href={`/consultations/book/${lawyer.user_id}`}
-                  className="size-9 rounded-full border border-border-custom flex items-center justify-center hover:bg-[#E7E9EA] transition-colors"
-                >
-                  <Calendar className="size-5 text-text-primary" />
-                </Link>
+                {isSubscribedLawyer ? (
+                  <>
+                    <Link
+                      href={`/messages?to=${lawyer.user_id}`}
+                      className="size-9 rounded-full border border-border-custom flex items-center justify-center hover:bg-[#E7E9EA] transition-colors"
+                      aria-label="Message lawyer"
+                    >
+                      <MessageCircle className="size-5 text-text-primary" />
+                    </Link>
+                    <Link
+                      href={`/consultations/book/${lawyer.user_id}`}
+                      className="size-9 rounded-full border border-border-custom flex items-center justify-center hover:bg-[#E7E9EA] transition-colors"
+                      aria-label="Book consultation"
+                    >
+                      <Calendar className="size-5 text-text-primary" />
+                    </Link>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-full border border-border-custom bg-[#F8FAFC] px-3 py-2 text-[13px] font-bold text-muted-text blur-[0.2px]">
+                    <Lock className="size-4" />
+                    Contact locked
+                  </div>
+                )}
                 <button
                   onClick={toggleFollow}
                   disabled={followLoading}
@@ -266,8 +280,8 @@ export default function LawyerProfilePage() {
           <h2 className="text-xl font-extrabold text-text-primary">
             {userProfile.full_name}
           </h2>
-          {userProfile.is_premium && <PremiumBadge size="sm" />}
-          {lawyer.verification_status === "verified" && (
+          {isSubscribedLawyer && <PremiumBadge size="sm" />}
+          {(isSubscribedLawyer || lawyer.verification_status === "verified") && (
             <BadgeCheck className="size-5 text-brand" />
           )}
           <TierBadge tier={lawyer.subscription_tier} size="sm" />
@@ -277,6 +291,12 @@ export default function LawyerProfilePage() {
         <p className="text-[15px] text-muted-text">
           @{userProfile.handle || lawyer.slug} · Lawyer
         </p>
+        {isSubscribedLawyer && lawyer.scn && (
+          <p className="mt-1 inline-flex items-center gap-1 rounded-lg bg-brand-light px-2 py-1 text-[13px] font-bold text-brand">
+            <BadgeCheck className="size-4" />
+            SCN {lawyer.scn}
+          </p>
+        )}
 
         {/* Bio */}
         {lawyer.bio && (
@@ -448,8 +468,9 @@ export default function LawyerProfilePage() {
                     <span className="text-[15px] font-bold text-text-primary truncate">
                       {userProfile.full_name}
                     </span>
-                    {userProfile.is_premium && <PremiumBadge size="sm" />}
-                    {lawyer.verification_status === "verified" && (
+                    {isSubscribedLawyer && <PremiumBadge size="sm" />}
+                    {(isSubscribedLawyer ||
+                      lawyer.verification_status === "verified") && (
                       <BadgeCheck className="size-[18px] text-brand shrink-0" />
                     )}
                     <span className="text-[15px] text-muted-text truncate">
@@ -534,7 +555,7 @@ export default function LawyerProfilePage() {
           )}
 
           {/* Credentials */}
-          {lawyer.scn && (
+          {isSubscribedLawyer && lawyer.scn && (
             <div className="pb-4">
               <h3 className="flex items-center gap-2 text-[15px] font-bold text-text-primary mb-2">
                 <BadgeCheck className="size-5 text-brand" />
@@ -548,6 +569,17 @@ export default function LawyerProfilePage() {
                   </p>
                 )}
               </div>
+            </div>
+          )}
+          {!isSubscribedLawyer && (
+            <div className="rounded-lg border border-border-custom bg-[#F8FAFC] p-4">
+              <h3 className="flex items-center gap-2 text-[15px] font-bold text-text-primary">
+                <Lock className="size-5 text-muted-text" />
+                Contact and SCN visibility locked
+              </h3>
+              <p className="mt-1 text-[13px] text-muted-text">
+                This lawyer can be discovered, but direct contact details and SCN display unlock after subscription.
+              </p>
             </div>
           )}
         </div>

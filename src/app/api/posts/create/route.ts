@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
-import { getPremiumLimits } from "@/lib/feature-gate";
+import { getPremiumLimits, isPaidSubscriptionTier } from "@/lib/feature-gate";
 import type { PostCategory } from "@/types";
 
 const POST_CATEGORIES: PostCategory[] = [
@@ -71,7 +71,16 @@ export async function POST(request: NextRequest) {
     }
 
     const userData = userDoc.data()!;
-    const limits = getPremiumLimits(Boolean(userData.is_premium));
+    const lawyerDoc = await adminDb.collection("lawyer_profiles").doc(uid).get();
+    const isSubscribedLawyer =
+      userData.role === "lawyer" &&
+      lawyerDoc.exists &&
+      isPaidSubscriptionTier(lawyerDoc.data()?.subscription_tier);
+    const limits = getPremiumLimits(
+      userData.role === "lawyer"
+        ? isSubscribedLawyer
+        : Boolean(userData.is_premium)
+    );
 
     if (rawPosts.length > 1 && !limits.canCreateThreads) {
       return NextResponse.json(
@@ -143,7 +152,6 @@ export async function POST(request: NextRequest) {
       updated_at: FieldValue.serverTimestamp(),
     });
 
-    const lawyerDoc = await adminDb.collection("lawyer_profiles").doc(uid).get();
     if (lawyerDoc.exists) {
       batch.update(adminDb.collection("lawyer_profiles").doc(uid), {
         post_count: FieldValue.increment(posts.length),

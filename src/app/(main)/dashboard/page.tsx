@@ -23,6 +23,7 @@ import {
   PenSquare,
   CreditCard,
   Shield,
+  MessagesSquare,
 } from "lucide-react";
 import { TierBadge } from "@/components/shared/tier-badge";
 import { PageLoader } from "@/components/shared/loading-spinner";
@@ -107,6 +108,15 @@ export default function DashboardPage() {
     { label: "Edit Profile", desc: "Update your details", href: "/dashboard/profile", icon: BadgeCheck },
     { label: "Messages", desc: "View conversations", href: "/messages", icon: MessageCircle },
     { label: "Consultations", desc: "Manage bookings", href: "/consultations", icon: Calendar },
+    {
+      label: "Case Circles",
+      desc:
+        lawyerProfile?.subscription_tier === "free"
+          ? "Upgrade to start or join lawyer discussions"
+          : "Request input from subscribed lawyers",
+      href: "/dashboard/case-circles",
+      icon: MessagesSquare,
+    },
     { label: "Verification", desc: lawyerProfile?.verification_status === "verified" ? "Verified" : "Get verified", href: "/dashboard/verification", icon: Shield },
     { label: "Subscription", desc: `${lawyerProfile?.subscription_tier || "Free"} plan`, href: "/dashboard/subscription", icon: CreditCard },
   ];

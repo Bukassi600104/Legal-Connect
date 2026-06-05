@@ -18,6 +18,11 @@ function normalizeText(value: unknown, maxLength: number) {
   return trimmed ? trimmed.slice(0, maxLength) : null;
 }
 
+function normalizeScn(value: unknown) {
+  const scn = normalizeText(value, 40)?.toUpperCase();
+  return scn && /^[A-Z0-9/.\- ]{3,40}$/.test(scn) ? scn : null;
+}
+
 function normalizeOptionalNumber(
   value: unknown,
   min: number,
@@ -112,10 +117,11 @@ export async function POST(request: NextRequest) {
     ).filter((id) => SPECIALIZATION_IDS.has(id));
     const feeMin = normalizeOptionalNumber(body.fee_range_min, 0, 100000000);
     const feeMax = normalizeOptionalNumber(body.fee_range_max, 0, 100000000);
+    const scn = normalizeScn(body.scn);
 
-    if (!locationState || !availability) {
+    if (!locationState || !availability || !scn) {
       return NextResponse.json(
-        { error: "Invalid profile details" },
+        { error: "Valid SCN, location, and availability are required" },
         { status: 400 }
       );
     }
@@ -136,7 +142,7 @@ export async function POST(request: NextRequest) {
         0,
         60
       ),
-      scn: normalizeText(body.scn, 40),
+      scn,
       nba_branch: normalizeText(body.nba_branch, 80),
       languages: normalizeStringList(body.languages, 10, 40),
       specialization_ids: specializationIds,

@@ -149,6 +149,11 @@ export async function POST(request: NextRequest) {
           updated_at: now,
         });
 
+        await db.collection("users").doc(lawyer_id).update({
+          is_premium: true,
+          updated_at: now,
+        });
+
         break;
       }
 
@@ -182,6 +187,11 @@ export async function POST(request: NextRequest) {
                 subscription_tier: "free",
                 updated_at: now,
               });
+
+            await db.collection("users").doc(subData.lawyer_id).update({
+              is_premium: false,
+              updated_at: now,
+            });
           }
         }
 

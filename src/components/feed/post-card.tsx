@@ -18,6 +18,7 @@ import { PremiumBadge } from "@/components/shared/premium-badge";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { PollDisplay } from "@/components/feed/poll-display";
 import { useAuth } from "@/components/providers/auth-provider";
+import { isPaidSubscriptionTier } from "@/lib/feature-gate";
 import { cn } from "@/lib/utils";
 import type { LawyerProfile, Post, UserProfile } from "@/types";
 
@@ -69,6 +70,10 @@ export function PostCard({ post }: PostCardProps) {
     : post.author_profile?.slug
       ? `/lawyer/${post.author_profile.slug}`
       : "#";
+  const authorIsSubscribed =
+    post.author?.role === "lawyer"
+      ? isPaidSubscriptionTier(post.author_profile?.subscription_tier)
+      : Boolean(post.author?.is_premium);
 
   const handleLike = async () => {
     if (!user || actionLoading) return;
@@ -148,7 +153,7 @@ export function PostCard({ post }: PostCardProps) {
                 >
                   {post.author?.full_name || "Unknown"}
                 </Link>
-                {post.author?.is_premium && <PremiumBadge size="sm" />}
+                {authorIsSubscribed && <PremiumBadge size="sm" />}
                 {post.author_profile && (
                   <VerificationBadge
                     status={post.author_profile.verification_status}

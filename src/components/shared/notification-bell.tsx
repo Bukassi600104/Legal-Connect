@@ -29,6 +29,7 @@ const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   consultation_reminder: Calendar,
   verification_update: Check,
   subscription_renewal: CreditCard,
+  case_discussion_invite: MessageCircle,
 };
 
 export function NotificationBell() {
@@ -101,6 +102,8 @@ export function NotificationBell() {
         return "/consultations";
       case "verification_update":
         return "/dashboard/profile";
+      case "case_discussion_invite":
+        return notif.data?.href || "/dashboard/case-circles";
       case "post_like":
       case "post_comment":
         return "/feed";

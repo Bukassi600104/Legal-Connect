@@ -12,7 +12,7 @@ import {
 import { OptimizedAvatar } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
 import { POST_CATEGORY_LABELS } from "@/lib/constants";
-import { getPremiumLimits } from "@/lib/feature-gate";
+import { getPremiumLimits, isPaidSubscriptionTier } from "@/lib/feature-gate";
 import type { PostCategory } from "@/types";
 
 interface ComposeBoxProps {
@@ -20,7 +20,7 @@ interface ComposeBoxProps {
 }
 
 export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
-  const { profile } = useAuth();
+  const { profile, lawyerProfile } = useAuth();
   const [content, setContent] = useState("");
   const [category, setCategory] = useState<PostCategory | "">("");
   const [posting, setPosting] = useState(false);
@@ -28,7 +28,11 @@ export function ComposeBox({ onPostCreated }: ComposeBoxProps) {
 
   if (!profile) return null;
 
-  const limits = getPremiumLimits(profile.is_premium ?? false);
+  const limits = getPremiumLimits(
+    profile.role === "lawyer"
+      ? isPaidSubscriptionTier(lawyerProfile?.subscription_tier)
+      : Boolean(profile.is_premium)
+  );
   const charLimit = limits.charLimit;
 
   const handlePost = async () => {

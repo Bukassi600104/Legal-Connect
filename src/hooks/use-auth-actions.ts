@@ -30,6 +30,7 @@ interface SignUpData {
   role: UserRole;
   accountType?: AccountType;
   phone?: string;
+  scn?: string;
 }
 
 interface SignInData {
@@ -46,6 +47,15 @@ export function useAuthActions() {
   const signUp = async (data: SignUpData) => {
     setLoading(true);
     setError(null);
+    const scn = data.scn?.trim().toUpperCase();
+
+    if (data.role === "lawyer" && !scn) {
+      const message = "SCN is required for lawyer registration.";
+      setError(message);
+      setLoading(false);
+      throw new Error(message);
+    }
+
     try {
       // Create Firebase Auth user
       const credential = await createUserWithEmailAndPassword(
@@ -96,7 +106,7 @@ export function useAuthActions() {
           bio: null,
           cover_image_url: null,
           years_of_experience: null,
-          scn: null,
+          scn,
           nba_branch: null,
           location_state: "",
           location_city: null,

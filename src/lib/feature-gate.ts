@@ -126,6 +126,10 @@ export function getPremiumLimits(isPremium: boolean): PremiumLimits {
   return isPremium ? PREMIUM_LIMITS : FREE_LIMITS;
 }
 
+export function isPaidSubscriptionTier(tier?: SubscriptionTier | null): boolean {
+  return tier === "professional" || tier === "elite";
+}
+
 export function canUsePremiumFeature(
   isPremium: boolean,
   feature: keyof PremiumLimits

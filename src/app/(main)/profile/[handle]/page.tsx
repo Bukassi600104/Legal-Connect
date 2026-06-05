@@ -29,6 +29,7 @@ import {
   OptimizedFillImage,
 } from "@/components/shared/optimized-image";
 import { useAuth } from "@/components/providers/auth-provider";
+import { isPaidSubscriptionTier } from "@/lib/feature-gate";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Post, UserProfile, LawyerProfile } from "@/types";
@@ -210,6 +211,9 @@ export default function ProfilePage() {
   const createdAt = toDateValue(profileUser.created_at);
 
   const isOwnProfile = currentUser?.uid === profileUser.id;
+  const isSubscribedLawyer =
+    profileUser.role === "lawyer" &&
+    isPaidSubscriptionTier(lawyerProfile?.subscription_tier);
 
   const tabs: { label: string; value: Tab }[] = [
     { label: "Posts", value: "posts" },
@@ -233,7 +237,7 @@ export default function ProfilePage() {
             <h1 className="text-xl font-extrabold text-text-primary leading-tight">
               {profileUser.full_name}
             </h1>
-            {profileUser.is_premium && <PremiumBadge size="sm" />}
+            {isSubscribedLawyer && <PremiumBadge size="sm" />}
             {lawyerProfile && (
               <VerificationBadge status={lawyerProfile.verification_status} size="sm" />
             )}
@@ -313,7 +317,7 @@ export default function ProfilePage() {
             <h2 className="text-xl font-extrabold text-text-primary">
               {profileUser.full_name}
             </h2>
-            {profileUser.is_premium && <PremiumBadge />}
+            {isSubscribedLawyer && <PremiumBadge />}
             {lawyerProfile && (
               <VerificationBadge status={lawyerProfile.verification_status} size="sm" />
             )}

@@ -27,12 +27,14 @@ export default function SubscriptionPage() {
   const { user, profile, lawyerProfile } = useAuth();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [loading, setLoading] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const currentTier = lawyerProfile?.subscription_tier || "free";
 
   async function handleSubscribe(planId: string) {
     if (!user || !profile || loading) return;
     setLoading(planId);
+    setCheckoutError(null);
 
     try {
       const plan =
@@ -53,10 +55,16 @@ export default function SubscriptionPage() {
       if (data.authorization_url) {
         window.location.href = data.authorization_url;
       } else {
-        console.error("Payment error:", data.error);
+        setCheckoutError(
+          data.error ||
+            "Subscription checkout is not available yet. Please try again after payment setup is completed."
+        );
       }
     } catch (error) {
       console.error("Error initializing payment:", error);
+      setCheckoutError(
+        "Subscription checkout is not available yet. Please try again after payment setup is completed."
+      );
     } finally {
       setLoading(null);
     }
@@ -90,6 +98,16 @@ export default function SubscriptionPage() {
             <span className="text-[13px] text-muted-text">Current plan:</span>
             <TierBadge tier={currentTier} />
           </div>
+          {checkoutError && (
+            <div className="mx-auto mt-4 max-w-md rounded-lg border border-brand/20 bg-brand-light px-4 py-3 text-left">
+              <p className="text-[14px] font-bold text-text-primary">
+                Checkout setup pending
+              </p>
+              <p className="mt-1 text-[13px] text-muted-text">
+                {checkoutError}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Billing toggle */}

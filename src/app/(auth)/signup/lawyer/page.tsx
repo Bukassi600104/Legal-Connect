@@ -70,6 +70,11 @@ export default function LawyerSignupPage() {
       return;
     }
 
+    if (!formData.scn.trim()) {
+      setValidationError("SCN is required for lawyer registration.");
+      return;
+    }
+
     try {
       await signUp({
         email: formData.email,
@@ -78,6 +83,7 @@ export default function LawyerSignupPage() {
         phone: formData.phone || undefined,
         role: "lawyer",
         accountType: "individual",
+        scn: formData.scn,
       });
 
       router.push("/dashboard");
@@ -196,14 +202,15 @@ export default function LawyerSignupPage() {
       ) : (
         <form onSubmit={handleSubmit} className="mt-5 space-y-3">
           <Input
-            placeholder="Supreme Court Number (optional)"
+            placeholder="Supreme Court Number (SCN)"
             value={formData.scn}
             onChange={(e) => updateField("scn", e.target.value)}
             className="h-[42px] rounded-md border-border-custom text-[15px] focus-visible:ring-brand"
+            required
             disabled={loading}
           />
           <p className="text-[12px] text-muted-text -mt-1 ml-1">
-            You can add this later during verification.
+            Required for every lawyer account. You can verify documents later.
           </p>
 
           <Input

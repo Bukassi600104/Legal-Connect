@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, X, Loader2 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { OptimizedAvatar } from "@/components/shared/optimized-image";
-import { getPremiumLimits } from "@/lib/feature-gate";
+import { getPremiumLimits, isPaidSubscriptionTier } from "@/lib/feature-gate";
 
 interface ThreadComposerProps {
   onThreadCreated?: () => void;
@@ -12,13 +12,17 @@ interface ThreadComposerProps {
 }
 
 export function ThreadComposer({ onThreadCreated, onCancel }: ThreadComposerProps) {
-  const { profile } = useAuth();
+  const { profile, lawyerProfile } = useAuth();
   const [entries, setEntries] = useState<string[]>(["", ""]);
   const [posting, setPosting] = useState(false);
 
   if (!profile) return null;
 
-  const limits = getPremiumLimits(profile.is_premium ?? false);
+  const limits = getPremiumLimits(
+    profile.role === "lawyer"
+      ? isPaidSubscriptionTier(lawyerProfile?.subscription_tier)
+      : Boolean(profile.is_premium)
+  );
   const charLimit = limits.charLimit;
 
   const addEntry = () => {
