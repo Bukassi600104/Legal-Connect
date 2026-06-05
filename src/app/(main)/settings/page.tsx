@@ -2,17 +2,39 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { validateHandle, isHandleAvailable } from "@/lib/handle-utils";
 import {
   LogOut,
   Loader2,
   Check,
   X,
+  Camera,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { OptimizedAvatar } from "@/components/shared/optimized-image";
+import {
+  OptimizedAvatar,
+  OptimizedFillImage,
+} from "@/components/shared/optimized-image";
+import { storage } from "@/lib/firebase/config";
 
 export const dynamic = "force-dynamic";
+
+function getImageDimensions(file: File) {
+  return new Promise<{ width: number; height: number }>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Invalid image file"));
+    };
+    image.src = url;
+  });
+}
 
 export default function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -20,7 +42,15 @@ export default function SettingsPage() {
 
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [bio, setBio] = useState(profile?.bio || "");
   const [handle, setHandle] = useState(profile?.handle || "");
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+  const [bannerUrl, setBannerUrl] = useState(profile?.banner_url || "");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [bannerPreview, setBannerPreview] = useState("");
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
   const [saving, setSaving] = useState(false);
 
@@ -28,9 +58,12 @@ export default function SettingsPage() {
     queueMicrotask(() => {
       if (profile?.full_name && !fullName) setFullName(profile.full_name);
       if (profile?.phone && !phone) setPhone(profile.phone);
+      if (profile?.bio && !bio) setBio(profile.bio);
       if (profile?.handle && !handle) setHandle(profile.handle);
+      if (profile?.avatar_url && !avatarUrl) setAvatarUrl(profile.avatar_url);
+      if (profile?.banner_url && !bannerUrl) setBannerUrl(profile.banner_url);
     });
-  }, [fullName, handle, phone, profile]);
+  }, [avatarUrl, bannerUrl, bio, fullName, handle, phone, profile]);
   const [saved, setSaved] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -49,6 +82,54 @@ export default function SettingsPage() {
     setHandleStatus("checking");
     const available = await isHandleAvailable(cleaned);
     setHandleStatus(available ? "available" : "taken");
+  }
+
+  async function handleAvatarSelect(file: File | undefined) {
+    setMediaError(null);
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 3 * 1024 * 1024) {
+      setMediaError("Profile image must be an image under 3MB.");
+      return;
+    }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  async function handleBannerSelect(file: File | undefined) {
+    setMediaError(null);
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 6 * 1024 * 1024) {
+      setMediaError("Banner image must be an image under 6MB.");
+      return;
+    }
+
+    try {
+      const { width, height } = await getImageDimensions(file);
+      const ratio = width / height;
+      if (width < 1200 || height < 400 || ratio < 2.7 || ratio > 3.3) {
+        setMediaError(
+          "Banner must be at least 1200x400px and close to a 3:1 ratio, for example 1500x500px."
+        );
+        return;
+      }
+
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    } catch {
+      setMediaError("Could not read that banner image.");
+    }
+  }
+
+  async function uploadProfileMedia(file: File, kind: "avatar" | "banner") {
+    if (!user) throw new Error("Authentication required");
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const storageRef = ref(
+      storage,
+      `profile-media/${user.uid}/${kind}_${Date.now()}.${extension}`
+    );
+    await uploadBytes(storageRef, file, { contentType: file.type });
+    return getDownloadURL(storageRef);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -74,6 +155,13 @@ export default function SettingsPage() {
         }
       }
 
+      const nextAvatarUrl = avatarFile
+        ? await uploadProfileMedia(avatarFile, "avatar")
+        : avatarUrl || null;
+      const nextBannerUrl = bannerFile
+        ? await uploadProfileMedia(bannerFile, "banner")
+        : bannerUrl || null;
+
       const response = await fetch("/api/settings/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,6 +169,9 @@ export default function SettingsPage() {
           full_name: fullName.trim(),
           phone: phone.trim(),
           handle: cleanedHandle || profile?.handle,
+          bio,
+          avatar_url: nextAvatarUrl,
+          banner_url: nextBannerUrl,
         }),
       });
 
@@ -91,6 +182,12 @@ export default function SettingsPage() {
       }
 
       await refreshProfile();
+      setAvatarUrl(nextAvatarUrl || "");
+      setBannerUrl(nextBannerUrl || "");
+      setAvatarFile(null);
+      setBannerFile(null);
+      setAvatarPreview("");
+      setBannerPreview("");
       setHandleStatus("idle");
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -151,11 +248,56 @@ export default function SettingsPage() {
         {/* Profile section */}
         <div className="p-4">
           <form onSubmit={handleSave} className="space-y-4">
+            <div>
+              <label className="text-[15px] font-medium text-text-primary block mb-2">
+                Banner image
+              </label>
+              <div className="relative h-36 overflow-hidden rounded-lg border border-border-custom bg-brand/10">
+                {bannerPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={bannerPreview}
+                    alt="Banner preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : bannerUrl ? (
+                  <OptimizedFillImage
+                    src={bannerUrl}
+                    alt="Profile banner"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[13px] font-semibold text-muted-text">
+                    Recommended size: 1500x500px
+                  </div>
+                )}
+                <label className="absolute bottom-3 right-3 inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-white px-3 text-[13px] font-bold text-text-primary shadow-sm hover:bg-[#F8FAFC]">
+                  <Camera className="size-4" />
+                  Change banner
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => void handleBannerSelect(e.target.files?.[0])}
+                  />
+                </label>
+              </div>
+              <p className="mt-1 text-[12px] text-muted-text">
+                Upload at least 1200x400px, close to a 3:1 ratio.
+              </p>
+            </div>
+
             <div className="flex items-center gap-4 mb-4">
-              {profile?.avatar_url ? (
+              {avatarPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarPreview}
+                  alt="Profile preview"
+                  className="size-16 rounded-full object-cover"
+                />
+              ) : avatarUrl ? (
                 <OptimizedAvatar
-                  src={profile.avatar_url}
-                  alt={profile.full_name}
+                  src={avatarUrl}
+                  alt={profile?.full_name || "Profile image"}
                   className="size-16"
                   sizes="64px"
                 />
@@ -174,8 +316,24 @@ export default function SettingsPage() {
                 <p className="text-[13px] text-muted-text capitalize">
                   {profile?.role} account
                 </p>
+                <label className="mt-2 inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-border-custom px-3 text-[13px] font-bold text-text-primary hover:bg-[#F8FAFC]">
+                  <Camera className="size-4" />
+                  Change profile image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => void handleAvatarSelect(e.target.files?.[0])}
+                  />
+                </label>
               </div>
             </div>
+
+            {mediaError && (
+              <div className="rounded-lg bg-error/10 px-3 py-2 text-[13px] font-semibold text-error">
+                {mediaError}
+              </div>
+            )}
 
             <div>
               <label htmlFor="fullName" className="text-[15px] font-medium text-text-primary block mb-1">
@@ -241,6 +399,24 @@ export default function SettingsPage() {
               />
               <p className="mt-1 text-[13px] text-muted-text">
                 Email cannot be changed here for security reasons.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="bio" className="text-[15px] font-medium text-text-primary block mb-1">
+                Bio
+              </label>
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell people about yourself or your practice"
+                maxLength={500}
+                rows={4}
+                className="w-full resize-none rounded-md border border-border-custom bg-transparent px-3 py-2 text-[15px] text-text-primary placeholder:text-muted-text outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
+              />
+              <p className="mt-1 text-[13px] text-muted-text">
+                {bio.length}/500
               </p>
             </div>
 

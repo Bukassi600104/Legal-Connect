@@ -55,6 +55,9 @@ export function PostCard({ post }: PostCardProps) {
   const [liked, setLiked] = useState(post.is_liked ?? false);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [bookmarked, setBookmarked] = useState(post.is_bookmarked ?? false);
+  const [bookmarkCount, setBookmarkCount] = useState(post.bookmark_count ?? 0);
+  const [shared, setShared] = useState(post.is_shared ?? false);
+  const [shareCount, setShareCount] = useState(post.share_count);
   const [actionLoading, setActionLoading] = useState(false);
 
   const createdAt = post.created_at
@@ -119,10 +122,57 @@ export function PostCard({ post }: PostCardProps) {
       }
 
       setBookmarked(Boolean(data.active));
+      if (typeof data.bookmark_count === "number") {
+        setBookmarkCount(data.bookmark_count);
+      }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleRepost = async () => {
+    if (!user || actionLoading) return;
+    setActionLoading(true);
+
+    try {
+      const response = await fetch("/api/posts/interaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post_id: post.id, interaction: "share" }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Post interaction failed");
+      }
+
+      setShared(Boolean(data.active));
+      if (typeof data.share_count === "number") {
+        setShareCount(data.share_count);
+      }
+    } catch (error) {
+      console.error("Error toggling repost:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleShareLink = async () => {
+    const url = `${window.location.origin}/feed/${post.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "LegalConnect post",
+          text: post.content.slice(0, 120),
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch {
+      // User cancelled native share.
     }
   };
 
@@ -234,10 +284,16 @@ export function PostCard({ post }: PostCardProps) {
               </span>
             </Link>
 
-            <button className="inline-flex h-9 items-center justify-center gap-1 rounded-lg transition-colors hover:bg-success/10 hover:text-success">
+            <button
+              onClick={handleRepost}
+              className={cn(
+                "inline-flex h-9 items-center justify-center gap-1 rounded-lg transition-colors hover:bg-success/10 hover:text-success",
+                shared && "text-success"
+              )}
+            >
               <Repeat2 className="size-[17px]" />
               <span className="text-[13px]">
-                {post.share_count > 0 ? post.share_count : ""}
+                {shareCount > 0 ? shareCount : ""}
               </span>
             </button>
 
@@ -262,7 +318,7 @@ export function PostCard({ post }: PostCardProps) {
             <button
               onClick={handleBookmark}
               className={cn(
-                "inline-flex h-9 items-center justify-center rounded-lg transition-colors hover:bg-gold-light hover:text-gold",
+                "inline-flex h-9 items-center justify-center gap-1 rounded-lg transition-colors hover:bg-gold-light hover:text-gold",
                 bookmarked && "text-gold"
               )}
             >
@@ -272,9 +328,15 @@ export function PostCard({ post }: PostCardProps) {
                   bookmarked && "fill-gold text-gold"
                 )}
               />
+              <span className="text-[13px]">
+                {bookmarkCount > 0 ? bookmarkCount : ""}
+              </span>
             </button>
 
-            <button className="inline-flex h-9 items-center justify-center rounded-lg transition-colors hover:bg-brand-light hover:text-brand">
+            <button
+              onClick={handleShareLink}
+              className="inline-flex h-9 items-center justify-center rounded-lg transition-colors hover:bg-brand-light hover:text-brand"
+            >
               <Share className="size-[17px]" />
             </button>
           </div>

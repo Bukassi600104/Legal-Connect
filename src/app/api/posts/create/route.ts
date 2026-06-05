@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
         like_count: 0,
         comment_count: 0,
         share_count: 0,
+        bookmark_count: 0,
         view_count: 0,
         is_boosted: false,
         ...(threadId

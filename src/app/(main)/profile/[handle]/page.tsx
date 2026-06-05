@@ -50,6 +50,32 @@ type PopulatedPost = Post & {
   author_profile?: LawyerProfile;
 };
 
+async function hydratePost(postId: string): Promise<PopulatedPost | null> {
+  const postDoc = await getDoc(doc(db, "posts", postId));
+  if (!postDoc.exists()) return null;
+
+  const post = { id: postDoc.id, ...postDoc.data() } as PopulatedPost;
+  const authorId = post.author_id;
+
+  const [authorDoc, lawyerDoc] = await Promise.all([
+    getDoc(doc(db, "users", authorId)),
+    getDoc(doc(db, "lawyer_profiles", authorId)),
+  ]);
+
+  if (authorDoc.exists()) {
+    post.author = { id: authorDoc.id, ...authorDoc.data() } as UserProfile;
+  }
+
+  if (lawyerDoc.exists()) {
+    post.author_profile = {
+      id: lawyerDoc.id,
+      ...lawyerDoc.data(),
+    } as LawyerProfile;
+  }
+
+  return post;
+}
+
 export default function ProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -120,39 +146,69 @@ export default function ProfilePage() {
     async function fetchPosts() {
       setPostsLoading(true);
       try {
-        let q;
-
         if (activeTab === "posts") {
-          q = query(
+          const q = query(
             collection(db, "posts"),
             where("author_id", "==", profileUser!.id),
             orderBy("created_at", "desc")
           );
+          const snapshot = await getDocs(q);
+          const results: PopulatedPost[] = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+            author: profileUser,
+            author_profile: lawyerProfile || undefined,
+          })) as PopulatedPost[];
+          setPosts(results);
         } else if (activeTab === "threads") {
-          q = query(
+          const q = query(
             collection(db, "posts"),
             where("author_id", "==", profileUser!.id),
             where("is_thread_starter", "==", true),
             orderBy("created_at", "desc")
           );
+          const snapshot = await getDocs(q);
+          const results: PopulatedPost[] = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+            author: profileUser,
+            author_profile: lawyerProfile || undefined,
+          })) as PopulatedPost[];
+          setPosts(results);
+        } else if (activeTab === "likes") {
+          if (!currentUser) {
+            setPosts([]);
+            return;
+          }
+
+          const likesQuery = query(
+            collection(db, "post_likes"),
+            where("user_id", "==", profileUser!.id),
+            orderBy("created_at", "desc")
+          );
+          const likesSnap = await getDocs(likesQuery);
+          const hydrated = await Promise.all(
+            likesSnap.docs
+              .map((likeDoc) => likeDoc.data().post_id)
+              .filter((postId): postId is string => typeof postId === "string")
+              .map((postId) => hydratePost(postId))
+          );
+          setPosts(hydrated.filter((post): post is PopulatedPost => !!post));
         } else {
-          // For replies and likes, just show posts for now
-          q = query(
+          const q = query(
             collection(db, "posts"),
             where("author_id", "==", profileUser!.id),
             orderBy("created_at", "desc")
           );
+          const snapshot = await getDocs(q);
+          const results: PopulatedPost[] = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+            author: profileUser,
+            author_profile: lawyerProfile || undefined,
+          })) as PopulatedPost[];
+          setPosts(results);
         }
-
-        const snapshot = await getDocs(q);
-        const results: PopulatedPost[] = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-          author: profileUser,
-          author_profile: lawyerProfile || undefined,
-        })) as PopulatedPost[];
-
-        setPosts(results);
       } catch (error) {
         console.error("Error fetching profile posts:", error);
       } finally {
@@ -161,7 +217,7 @@ export default function ProfilePage() {
     }
 
     fetchPosts();
-  }, [profileUser, lawyerProfile, activeTab]);
+  }, [profileUser, lawyerProfile, activeTab, currentUser]);
 
   const handleFollow = async () => {
     if (!currentUser || !profileUser || currentUser.uid === profileUser.id) return;
@@ -358,14 +414,14 @@ export default function ProfilePage() {
 
         {/* Following / Followers */}
         <div className="flex items-center gap-4 text-[15px] mb-1">
-          <span>
+          <Link href={`/profile/${profileUser.handle}/following`}>
             <strong className="text-text-primary">{profileUser.following_count || 0}</strong>{" "}
             <span className="text-muted-text">Following</span>
-          </span>
-          <span>
+          </Link>
+          <Link href={`/profile/${profileUser.handle}/followers`}>
             <strong className="text-text-primary">{followerCount}</strong>{" "}
             <span className="text-muted-text">Followers</span>
-          </span>
+          </Link>
         </div>
       </div>
 

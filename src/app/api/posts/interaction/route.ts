@@ -3,10 +3,12 @@ import { cookies } from "next/headers";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 
-type InteractionType = "like" | "bookmark";
+type InteractionType = "like" | "bookmark" | "share";
 
 function normalizeInteraction(value: unknown): InteractionType | null {
-  return value === "like" || value === "bookmark" ? value : null;
+  return value === "like" || value === "bookmark" || value === "share"
+    ? value
+    : null;
 }
 
 export async function POST(request: NextRequest) {
@@ -36,13 +38,19 @@ export async function POST(request: NextRequest) {
 
     const postRef = adminDb.collection("posts").doc(postId);
     const collectionName =
-      interaction === "like" ? "post_likes" : "post_bookmarks";
+      interaction === "like"
+        ? "post_likes"
+        : interaction === "bookmark"
+          ? "post_bookmarks"
+          : "post_shares";
     const interactionRef = adminDb
       .collection(collectionName)
       .doc(`${uid}_${postId}`);
 
     let active = false;
     let likeCount: number | null = null;
+    let bookmarkCount: number | null = null;
+    let shareCount: number | null = null;
 
     await adminDb.runTransaction(async (transaction) => {
       const [postDoc, existingDoc] = await Promise.all([
@@ -62,7 +70,19 @@ export async function POST(request: NextRequest) {
           const currentCount = Number(postDoc.data()?.like_count || 0);
           likeCount = Math.max(0, currentCount - 1);
           transaction.update(postRef, {
-            like_count: FieldValue.increment(-1),
+            like_count: likeCount,
+          });
+        } else if (interaction === "bookmark") {
+          const currentCount = Number(postDoc.data()?.bookmark_count || 0);
+          bookmarkCount = Math.max(0, currentCount - 1);
+          transaction.update(postRef, {
+            bookmark_count: bookmarkCount,
+          });
+        } else if (interaction === "share") {
+          const currentCount = Number(postDoc.data()?.share_count || 0);
+          shareCount = Math.max(0, currentCount - 1);
+          transaction.update(postRef, {
+            share_count: shareCount,
           });
         }
       } else {
@@ -77,7 +97,19 @@ export async function POST(request: NextRequest) {
           const currentCount = Number(postDoc.data()?.like_count || 0);
           likeCount = currentCount + 1;
           transaction.update(postRef, {
-            like_count: FieldValue.increment(1),
+            like_count: likeCount,
+          });
+        } else if (interaction === "bookmark") {
+          const currentCount = Number(postDoc.data()?.bookmark_count || 0);
+          bookmarkCount = currentCount + 1;
+          transaction.update(postRef, {
+            bookmark_count: bookmarkCount,
+          });
+        } else if (interaction === "share") {
+          const currentCount = Number(postDoc.data()?.share_count || 0);
+          shareCount = currentCount + 1;
+          transaction.update(postRef, {
+            share_count: shareCount,
           });
         }
       }
@@ -87,6 +119,8 @@ export async function POST(request: NextRequest) {
       status: "success",
       active,
       ...(likeCount == null ? {} : { like_count: likeCount }),
+      ...(bookmarkCount == null ? {} : { bookmark_count: bookmarkCount }),
+      ...(shareCount == null ? {} : { share_count: shareCount }),
     });
   } catch (error) {
     if (error instanceof Error && error.message === "POST_NOT_FOUND") {

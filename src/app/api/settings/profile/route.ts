@@ -22,6 +22,34 @@ function normalizePhone(value: unknown) {
   return /^[+0-9()\-\s]{7,24}$/.test(phone) ? phone : undefined;
 }
 
+function normalizeBio(value: unknown) {
+  if (typeof value !== "string") return null;
+  const bio = value.trim();
+  return bio ? bio.slice(0, 500) : null;
+}
+
+function normalizeImageUrl(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const url = value.trim();
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const allowedHosts = [
+      "firebasestorage.googleapis.com",
+      "lh3.googleusercontent.com",
+      "i.pravatar.cc",
+      "api.dicebear.com",
+    ];
+
+    return parsed.protocol === "https:" && allowedHosts.includes(parsed.hostname)
+      ? url
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -40,8 +68,17 @@ export async function POST(request: NextRequest) {
     const fullName = normalizeName(body.full_name);
     const handle = normalizeHandle(body.handle);
     const phone = normalizePhone(body.phone);
+    const bio = normalizeBio(body.bio);
+    const avatarUrl = normalizeImageUrl(body.avatar_url);
+    const bannerUrl = normalizeImageUrl(body.banner_url);
 
-    if (!fullName || !handle || phone === undefined) {
+    if (
+      !fullName ||
+      !handle ||
+      phone === undefined ||
+      avatarUrl === undefined ||
+      bannerUrl === undefined
+    ) {
       return NextResponse.json(
         { error: "Invalid profile details" },
         { status: 400 }
@@ -80,6 +117,9 @@ export async function POST(request: NextRequest) {
         full_name: fullName,
         phone,
         handle,
+        bio,
+        avatar_url: avatarUrl,
+        banner_url: bannerUrl,
         updated_at: FieldValue.serverTimestamp(),
       });
     });

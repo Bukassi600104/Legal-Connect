@@ -367,10 +367,25 @@ export default function LawyerProfilePage() {
 
         {/* Following / Followers count */}
         <div className="mt-3 flex gap-4 text-[15px]">
-          <span>
-            <strong className="text-text-primary">{lawyer.follower_count}</strong>{" "}
-            <span className="text-muted-text">Followers</span>
-          </span>
+          {userProfile.handle ? (
+            <>
+              <Link href={`/profile/${userProfile.handle}/following`}>
+                <strong className="text-text-primary">
+                  {userProfile.following_count || 0}
+                </strong>{" "}
+                <span className="text-muted-text">Following</span>
+              </Link>
+              <Link href={`/profile/${userProfile.handle}/followers`}>
+                <strong className="text-text-primary">{lawyer.follower_count}</strong>{" "}
+                <span className="text-muted-text">Followers</span>
+              </Link>
+            </>
+          ) : (
+            <span>
+              <strong className="text-text-primary">{lawyer.follower_count}</strong>{" "}
+              <span className="text-muted-text">Followers</span>
+            </span>
+          )}
           <span>
             <strong className="text-text-primary">{lawyer.post_count}</strong>{" "}
             <span className="text-muted-text">Posts</span>

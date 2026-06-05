@@ -51,6 +51,9 @@ export default function PostDetailPage() {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+  const [shared, setShared] = useState(false);
+  const [shareCount, setShareCount] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fetchComments = useCallback(async () => {
@@ -119,14 +122,18 @@ export default function PostDetailPage() {
 
       setPost({ ...postData, author, author_profile: authorProfile });
       setLikeCount(postData.like_count);
+      setBookmarkCount(postData.bookmark_count || 0);
+      setShareCount(postData.share_count || 0);
 
       if (user) {
-        const [likeDoc, bookmarkDoc] = await Promise.all([
+        const [likeDoc, bookmarkDoc, shareDoc] = await Promise.all([
           getDoc(doc(db, "post_likes", `${user.uid}_${postId}`)),
           getDoc(doc(db, "post_bookmarks", `${user.uid}_${postId}`)),
+          getDoc(doc(db, "post_shares", `${user.uid}_${postId}`)),
         ]);
         setLiked(likeDoc.exists());
         setBookmarked(bookmarkDoc.exists());
+        setShared(shareDoc.exists());
       }
 
       await fetchComments();
@@ -255,8 +262,52 @@ export default function PostDetailPage() {
       }
 
       setBookmarked(Boolean(data.active));
+      if (typeof data.bookmark_count === "number") {
+        setBookmarkCount(data.bookmark_count);
+      }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
+    }
+  }
+
+  async function handleRepost() {
+    if (!user) return;
+
+    try {
+      const response = await fetch("/api/posts/interaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post_id: postId, interaction: "share" }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Post interaction failed");
+      }
+
+      setShared(Boolean(data.active));
+      if (typeof data.share_count === "number") {
+        setShareCount(data.share_count);
+      }
+    } catch (error) {
+      console.error("Error toggling repost:", error);
+    }
+  }
+
+  async function handleShareLink() {
+    const url = `${window.location.origin}/feed/${postId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "LegalConnect post",
+          text: post?.content.slice(0, 120),
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch {
+      // User cancelled native share.
     }
   }
 
@@ -391,9 +442,9 @@ export default function PostDetailPage() {
 
         {/* Engagement stats */}
         <div className="py-3 border-t border-border-custom flex gap-5 text-[15px]">
-          {post.share_count > 0 && (
+          {shareCount > 0 && (
             <span>
-              <strong className="text-text-primary">{post.share_count}</strong>{" "}
+              <strong className="text-text-primary">{shareCount}</strong>{" "}
               <span className="text-muted-text">Reposts</span>
             </span>
           )}
@@ -401,9 +452,9 @@ export default function PostDetailPage() {
             <strong className="text-text-primary">{likeCount}</strong>{" "}
             <span className="text-muted-text">Likes</span>
           </span>
-          {"bookmark_count" in post && (post as unknown as { bookmark_count: number }).bookmark_count > 0 && (
+          {bookmarkCount > 0 && (
             <span>
-              <strong className="text-text-primary">{(post as unknown as { bookmark_count: number }).bookmark_count}</strong>{" "}
+              <strong className="text-text-primary">{bookmarkCount}</strong>{" "}
               <span className="text-muted-text">Bookmarks</span>
             </span>
           )}
@@ -417,7 +468,15 @@ export default function PostDetailPage() {
           >
             <MessageCircle className="size-5" />
           </button>
-          <button className="size-[34px] flex items-center justify-center rounded-full text-muted-text hover:text-[#00BA7C] hover:bg-[#00BA7C]/10 transition-colors">
+          <button
+            onClick={handleRepost}
+            className={cn(
+              "size-[34px] flex items-center justify-center rounded-full transition-colors",
+              shared
+                ? "text-[#00BA7C]"
+                : "text-muted-text hover:text-[#00BA7C] hover:bg-[#00BA7C]/10"
+            )}
+          >
             <Repeat2 className="size-5" />
           </button>
           <button
@@ -442,7 +501,10 @@ export default function PostDetailPage() {
           >
             <Bookmark className={cn("size-5", bookmarked && "fill-brand")} />
           </button>
-          <button className="size-[34px] flex items-center justify-center rounded-full text-muted-text hover:text-brand hover:bg-brand/10 transition-colors">
+          <button
+            onClick={handleShareLink}
+            className="size-[34px] flex items-center justify-center rounded-full text-muted-text hover:text-brand hover:bg-brand/10 transition-colors"
+          >
             <Share2 className="size-5" />
           </button>
         </div>

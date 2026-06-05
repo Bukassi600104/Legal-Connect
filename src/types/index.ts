@@ -153,6 +153,7 @@ export interface Post {
   like_count: number;
   comment_count: number;
   share_count: number;
+  bookmark_count?: number;
   view_count: number;
   is_boosted: boolean;
   thread_id?: string;
@@ -165,6 +166,7 @@ export interface Post {
   // Client-side state (not stored)
   is_liked?: boolean;
   is_bookmarked?: boolean;
+  is_shared?: boolean;
 }
 
 export interface PostComment {

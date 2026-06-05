@@ -247,14 +247,19 @@ async function checkUserEngagement(
     const bookmarkChecks = postIds.map((pid) =>
       getDoc(doc(db, "post_bookmarks", `${userId}_${pid}`))
     );
+    const shareChecks = postIds.map((pid) =>
+      getDoc(doc(db, "post_shares", `${userId}_${pid}`))
+    );
 
-    const [likes, bookmarks] = await Promise.all([
+    const [likes, bookmarks, shares] = await Promise.all([
       Promise.all(likeChecks),
       Promise.all(bookmarkChecks),
+      Promise.all(shareChecks),
     ]);
 
     const likedSet = new Set<string>();
     const bookmarkedSet = new Set<string>();
+    const sharedSet = new Set<string>();
 
     likes.forEach((snap, i) => {
       if (snap.exists()) likedSet.add(postIds[i]);
@@ -262,12 +267,16 @@ async function checkUserEngagement(
     bookmarks.forEach((snap, i) => {
       if (snap.exists()) bookmarkedSet.add(postIds[i]);
     });
+    shares.forEach((snap, i) => {
+      if (snap.exists()) sharedSet.add(postIds[i]);
+    });
 
     setPosts((prev) =>
       prev.map((p) => ({
         ...p,
         is_liked: likedSet.has(p.id),
         is_bookmarked: bookmarkedSet.has(p.id),
+        is_shared: sharedSet.has(p.id),
       }))
     );
   } catch (error) {
